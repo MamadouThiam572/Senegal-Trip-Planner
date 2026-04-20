@@ -432,8 +432,10 @@
                 <p><strong>Tourisme:</strong> ${r.tourisme || 'Non disponibles'}</p>
             `;
 
-            drawRoutes(nat.path, aut.path);
             window.currentRouteData = data;
+            Object.values(routeLayers).forEach(l => map.removeLayer(l));
+            routeLayers = {};
+            drawRoutes(nat.path, aut.path);
             toggleRouteDisplay();
             document.getElementById('results').classList.add('active');
             document.getElementById('infoCard').style.display = 'none';
