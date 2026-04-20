@@ -462,16 +462,44 @@
             await drawSingleRoute(autoroutePath, '#f97316', 'autoroute');
         }
 
-        async function drawSingleRoute(path, color, key) {
-            if (path.length < 2) return;
+        let offlineRoutes = null;
 
-            const latLngs = path.map(k => [regions[k].lat, regions[k].lng]);
-            
-            const coordinates = latLngs.map(p => `${p[1]},${p[0]}`).join(';');
-            const profile = key === 'autoroute' ? 'driving' : 'driving';
-            const url = `https://router.project-osrm.org/route/v1/${profile}/${coordinates}?overview=full&geometries=geojson`;
-            
-            try {
+            async function loadOfflineRoutes() {
+                try {
+                    const res = await fetch('/api/routes');
+                    offlineRoutes = await res.json();
+                } catch (e) { console.log('Offline routes not available'); }
+            }
+            loadOfflineRoutes();
+
+            async function drawSingleRoute(path, color, key) {
+                if (path.length < 2) return;
+
+                const latLngs = path.map(k => [regions[k].lat, regions[k].lng]);
+                
+                // Try offline routes first
+                if (offlineRoutes && offlineRoutes.capitals) {
+                    const routeType = key === 'autoroute' ? 'routes_autoroute' : 'routes_national';
+                    const routes = offlineRoutes[routeType] || {};
+                    
+                    let hasOfflineRoute = false;
+                    for (let i = 0; i < path.length - 1; i++) {
+                        const keyRoute = `${path[i]}_${path[i+1]}`;
+                        if (routes[keyRoute] && routes[keyRoute].coordinates) {
+                            routeLayers[key + i] = L.polyline(
+                                routes[keyRoute].coordinates.map(c => [c[0], c[1]]), 
+                                { color: color, weight: 4, opacity: 0.8 }
+                            ).addTo(map);
+                            hasOfflineRoute = true;
+                        }
+                    }
+                    if (hasOfflineRoute) return;
+                }
+                
+                // Fallback to OSRM
+                const coordinates = latLngs.map(p => `${p[1]},${p[0]}`).join(';');
+                const url = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson`;
+                
                 const response = await fetch(url);
                 const data = await response.json();
                 
@@ -485,15 +513,13 @@
                         lineCap: 'round'
                     }).addTo(map);
                 } else {
-                    throw new Error('No route');
+                    routeLayers[key] = L.polyline(latLngs, { 
+                        color: color, 
+                        weight: key === 'autoroute' ? 6 : 4, 
+                        opacity: key === 'autoroute' ? 1 : 0.7,
+                        dashArray: key === 'national' ? '10, 5' : null
+                    }).addTo(map);
                 }
-            } catch (e) {
-                routeLayers[key] = L.polyline(latLngs, { 
-                    color: color, 
-                    weight: key === 'autoroute' ? 6 : 4, 
-                    opacity: key === 'autoroute' ? 1 : 0.7,
-                    dashArray: key === 'national' ? '10, 5' : null
-                }).addTo(map);
             }
 
             if (routeLayers[key]) {

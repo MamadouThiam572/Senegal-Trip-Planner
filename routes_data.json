@@ -1,0 +1,82 @@
+{
+    "routes_national": {
+        "dakar_thies": {
+            "coordinates": [[14.7167, -17.4671], [14.7941, -16.9639]],
+            "distance_km": 46,
+            "road_type": "Route Nationale"
+        },
+        "dakar_fatick": {
+            "coordinates": [[14.7167, -17.4671], [14.3333, -16.0833]],
+            "distance_km": 148,
+            "road_type": "Route Nationale"
+        },
+        "thies_diourbel": {
+            "coordinates": [[14.7941, -16.9639], [14.7167, -16.2333]],
+            "distance_km": 77,
+            "road_type": "Route Nationale"
+        },
+        "diourbel_kaolack": {
+            "coordinates": [[14.7167, -16.2333], [14.1500, -16.0833]],
+            "distance_km": 85,
+            "road_type": "Route Nationale"
+        },
+        "kaolack_ziguinchor": {
+            "coordinates": [[14.1500, -16.0833], [12.5833, -16.2667]],
+            "distance_km": 205,
+            "road_type": "Route Nationale"
+        },
+        "saintlouis_matam": {
+            "coordinates": [[16.0333, -16.5000], [15.6667, -13.2667]],
+            "distance_km": 180,
+            "road_type": "Route Nationale"
+        }
+    },
+    "routes_autoroute": {
+        "dakar_thies": {
+            "coordinates": [[14.7167, -17.4671], [14.7941, -16.9639]],
+            "distance_km": 42,
+            "road_type": "Autoroute"
+        },
+        "dakar_kaolack": {
+            "coordinates": [[14.7167, -17.4671], [14.1500, -16.0833]],
+            "distance_km": 175,
+            "road_type": "Autoroute"
+        },
+        "thies_diourbel": {
+            "coordinates": [[14.7941, -16.9639], [14.7167, -16.2333]],
+            "distance_km": 72,
+            "road_type": "Autoroute"
+        },
+        "diourbel_kaolack": {
+            "coordinates": [[14.7167, -16.2333], [14.1500, -16.0833]],
+            "distance_km": 80,
+            "road_type": "Autoroute"
+        },
+        "kaolack_ziguinchor": {
+            "coordinates": [[14.1500, -16.0833], [12.5833, -16.2667]],
+            "distance_km": 192,
+            "road_type": "Autoroute"
+        },
+        "saintlouis_matam": {
+            "coordinates": [[16.0333, -16.5000], [15.6667, -13.2667]],
+            "distance_km": 170,
+            "road_type": "Autoroute"
+        }
+    },
+    "capitals": {
+        "dakar": [14.7167, -17.4671],
+        "thies": [14.7941, -16.9639],
+        "diourbel": [14.7167, -16.2333],
+        "kaolack": [14.1500, -16.0833],
+        "saintlouis": [16.0333, -16.5000],
+        "louga": [15.6333, -15.6333],
+        "kolda": [12.8833, -14.9500],
+        "ziguinchor": [12.5833, -16.2667],
+        "sedhiou": [12.7167, -15.1833],
+        "kaffrine": [14.1000, -15.4167],
+        "kedougou": [12.5667, -12.1833],
+        "matam": [15.6667, -13.2667],
+        "tamba": [13.7667, -13.6667],
+        "fatick": [14.3333, -16.0833]
+    }
+}

@@ -1,7 +1,17 @@
 from flask import Flask, render_template, jsonify, request
 import math
+import json
+import os
 
 app = Flask(__name__)
+
+# Load offline routes data
+routes_file = os.path.join(os.path.dirname(__file__), 'routes_data.json')
+if os.path.exists(routes_file):
+    with open(routes_file, 'r', encoding='utf-8') as f:
+        routes_data = json.load(f)
+else:
+    routes_data = {"routes_national": {}, "routes_autoroute": {}, "capitals": {}}
 
 regions = {
     "dakar": {
@@ -368,6 +378,12 @@ def index():
 @app.route('/api/regions')
 def get_regions():
     return jsonify(regions)
+
+
+@app.route('/api/routes')
+def get_routes():
+    """API for offline routes data."""
+    return jsonify(routes_data)
 
 
 @app.route('/api/dijkstra')
