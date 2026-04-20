@@ -239,7 +239,7 @@
                 </div>
                 <div class="control-group">
                     <label>Destination</label>
-                    <select id="destinationSelect"><option value="">Sélectionner</option></select>
+                    <select id="destinationSelect"><option value="">Sélectionner une destination</option></select>
                 </div>
                 <button class="primary" onclick="calculateDijkstra()">Dijkstra</button>
                 <button onclick="calculateBellman()">Bellman-Ford</button>
@@ -403,7 +403,6 @@
         }
 
         function displayResults(data) {
-            console.log('Data received:', data);
             const nat = data.national;
             const aut = data.autoroute;
 
@@ -411,30 +410,47 @@
             document.getElementById('nationalTime').textContent = nat.time || '-';
             document.getElementById('autorouteDist').textContent = aut.distance;
             document.getElementById('autorouteTime').textContent = aut.time || '-';
+            
+            if (nat.distance > 0) {
+                document.getElementById('results').innerHTML = `
+                    <h2>Itinéraire Calculé</h2>
+                    <p style="margin-bottom:15px;font-size:14px;color:#888">
+                        <strong>Départ:</strong> ${regions[nat.path[0]].name} → <strong>Arrivée:</strong> ${regions[nat.path[nat.path.length-1]].name}
+                    </p>
+                    
+                    <div class="route-section national">
+                        <h3>🛣️ Route Nationale</h3>
+                        <div class="route-stats">
+                            <div><strong>Distance:</strong> ${nat.distance} km</div>
+                            <div><strong>Durée estimée:</strong> ${nat.time || '-'}</div>
+                        </div>
+                        <ul class="route-list">
+                            ${nat.path.map((key, i) => `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span>${regions[key].name}</li>`).join('')}
+                        </ul>
+                    </div>
 
-            const natList = document.getElementById('nationalList');
-            natList.innerHTML = '';
-            nat.path.forEach((key, i) => {
-                natList.innerHTML += `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span>${regions[key].name}</li>`;
-            });
+                    <div class="route-section autoroute">
+                        <h3>🛣️ Autoroute</h3>
+                        <div class="route-stats">
+                            <div><strong>Distance:</strong> ${aut.distance} km</div>
+                            <div><strong>Durée estimée:</strong> ${aut.time || '-'}</div>
+                        </div>
+                        <ul class="route-list">
+                            ${aut.path.map((key, i) => `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span>${regions[key].name}</li>`).join('')}
+                        </ul>
+                    </div>
 
-            const autList = document.getElementById('autorouteList');
-            autList.innerHTML = '';
-            aut.path.forEach((key, i) => {
-                autList.innerHTML += `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span>${regions[key].name}</li>`;
-            });
-
-            const dest = nat.path[nat.path.length - 1];
-            const r = regions[dest];
-            document.getElementById('regionInfo').innerHTML = `
-                <h4>${r.name}</h4>
-                <p><strong>Capitale:</strong> ${r.capital}</p>
-                <p>${r.info}</p>
-                <p><strong>Conseils:</strong> ${r.tips || 'Non disponibles'}</p>
-                <p><strong>Sécurité:</strong> ${r.security || 'Non disponibles'}</p>
-                <p><strong>Hébergement:</strong> ${r.hebergement || 'Non disponibles'}</p>
-                <p><strong>Tourisme:</strong> ${r.tourisme || 'Non disponibles'}</p>
-            `;
+                    <div class="info-box">
+                        <h4>${regions[nat.path[nat.path.length-1]].name}</h4>
+                        <p><strong>Capitale:</strong> ${regions[nat.path[nat.path.length-1]].capital}</p>
+                        <p>${regions[nat.path[nat.path.length-1]].info}</p>
+                        <p><strong>Conseil:</strong> ${regions[nat.path[nat.path.length-1]].tips || '-'}</p>
+                        <p><strong>Sécurité:</strong> ${regions[nat.path[nat.path.length-1]].security || '-'}</p>
+                        <p><strong>Hébergement:</strong> ${regions[nat.path[nat.path.length-1]].hebergement || '-'}</p>
+                        <p><strong>Tourisme:</strong> ${regions[nat.path[nat.path.length-1]].tourisme || '-'}</p>
+                    </div>
+                `;
+            }
 
             window.currentRouteData = data;
             map.eachLayer(function(layer) {
