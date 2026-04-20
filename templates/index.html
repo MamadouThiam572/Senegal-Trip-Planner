@@ -403,12 +403,13 @@
         }
 
         function displayResults(data) {
+            console.log('Data received:', data);
             const nat = data.national;
             const aut = data.autoroute;
 
-            document.getElementById('nationalDist').textContent = nat.distance + ' km';
+            document.getElementById('nationalDist').textContent = nat.distance;
             document.getElementById('nationalTime').textContent = nat.time || '-';
-            document.getElementById('autorouteDist').textContent = aut.distance + ' km';
+            document.getElementById('autorouteDist').textContent = aut.distance;
             document.getElementById('autorouteTime').textContent = aut.time || '-';
 
             const natList = document.getElementById('nationalList');
