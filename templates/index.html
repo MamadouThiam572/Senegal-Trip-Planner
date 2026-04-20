@@ -265,27 +265,30 @@
             <div class="sidebar">
                 <div class="loading" id="loading"><p>Calcul en cours...</p></div>
                 <div class="results" id="results">
-                    <h2>Itinéraires</h2>
+                    <h2>Itinéraires Calculés</h2>
                     
                     <div class="route-section national active">
-                        <h3>🛣️ Route Nationale</h3>
+                        <h3>🛣️ Route Nationale (80 km/h)</h3>
                         <div class="route-stats">
-                            <div>Distance: <span id="nationalDist">0 km</span></div>
-                            <div>Durée: <span id="nationalTime">-</span></div>
+                            <div><strong>Distance:</strong> <span id="nationalDist">0</span> km</div>
+                            <div><strong>Durée:</strong> <span id="nationalTime">-</span></div>
                         </div>
                         <ul class="route-list" id="nationalList"></ul>
                     </div>
 
                     <div class="route-section autoroute active">
-                        <h3>🛞 Autoroute</h3>
+                        <h3>🛣️ Autoroute (100 km/h)</h3>
                         <div class="route-stats">
-                            <div>Distance: <span id="autorouteDist">0 km</span></div>
-                            <div>Durée: <span id="autorouteTime">-</span></div>
+                            <div><strong>Distance:</strong> <span id="autorouteDist">0</span> km</div>
+                            <div><strong>Durée:</strong> <span id="autorouteTime">-</span></div>
                         </div>
                         <ul class="route-list" id="autorouteList"></ul>
                     </div>
 
-                    <div class="info-box" id="regionInfo"></div>
+                    <div class="info-box" id="regionInfo">
+                        <h4>Informations de la région</h4>
+                        <p>Cliquez sur une région dans la liste pour voir les détails.</p>
+                    </div>
                 </div>
                 <div class="info-card" id="infoCard">
                     <h3>Informations</h3>
@@ -433,7 +436,11 @@
             `;
 
             window.currentRouteData = data;
-            Object.values(routeLayers).forEach(l => map.removeLayer(l));
+            map.eachLayer(function(layer) {
+                if (layer instanceof L.Polyline) {
+                    map.removeLayer(layer);
+                }
+            });
             routeLayers = {};
             drawRoutes(nat.path, aut.path);
             toggleRouteDisplay();
