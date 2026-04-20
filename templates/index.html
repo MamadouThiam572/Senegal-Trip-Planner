@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senegal Trip Planner</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-card-light: #1f2b47;
+            --text-primary: #e8e8e8;
+            --text-secondary: #a0a0a0;
+            --accent: #4a90a4;
+            --accent-hover: #5ba3bc;
+            --border: #2a3a5a;
+            --national: #3b82f6;
+            --autoroute: #f97316;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background: var(--bg-dark);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        header h1 { font-size: 1.8rem; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; }
+        header p { color: var(--text-secondary); font-size: 0.9rem; margin-top: 8px; }
+
+        .controls {
+            background: var(--bg-card);
+            padding: 20px 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .control-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .control-group { display: flex; flex-direction: column; gap: 6px; }
+        .control-group label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+
+        select {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background: var(--bg-card-light);
+            color: var(--text-primary);
+            min-width: 160px;
+            outline: none;
+        }
+
+        select:hover, select:focus { border-color: var(--accent); }
+
+        button {
+            padding: 10px 20px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-card-light);
+            color: var(--text-primary);
+        }
+
+        button:hover { background: var(--accent); border-color: var(--accent); }
+        button.primary { background: var(--accent); border-color: var(--accent); }
+        button.primary:hover { background: var(--accent-hover); }
+
+        .legend {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 15px;
+            padding: 12px;
+            background: var(--bg-card-light);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+        .legend-item label { color: var(--text-secondary); }
+        .legend-item select { 
+            background: var(--bg-card); 
+            color: var(--text-primary); 
+            border: 1px solid var(--border); 
+            padding: 6px 12px; 
+            border-radius: 4px; 
+            cursor: pointer;
+        }
+        
+        .route-section { display: none; }
+        .route-section.active { display: block; }
+
+        .main-content { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+        @media (max-width: 1024px) { .main-content { grid-template-columns: 1fr; } }
+
+        .map-container {
+            background: var(--bg-card);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        #map { height: 520px; border-radius: 8px; }
+
+        .sidebar { display: flex; flex-direction: column; gap: 15px; }
+
+        .results, .info-card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .results { display: none; }
+        .results.active { display: block; }
+        .results h2 { font-size: 1rem; font-weight: 500; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+        .route-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--bg-card-light);
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+
+        .route-section.national { border-left-color: var(--national); }
+        .route-section.autoroute { border-left-color: var(--autoroute); }
+
+        .route-section h3 {
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .route-section.national h3 { color: var(--national); }
+        .route-section.autoroute h3 { color: var(--autoroute); }
+
+        .route-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .route-stats span { font-weight: 500; color: var(--text-primary); }
+
+        .route-list { list-style: none; margin-top: 10px; }
+        .route-list li {
+            padding: 8px 12px;
+            margin: 4px 0;
+            background: var(--bg-card);
+            border-radius: 4px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            border: 1px solid var(--border);
+        }
+
+        .route-list li:hover { border-color: var(--accent); }
+        .route-list .num { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; flex-shrink: 0; }
+        .route-section.national .route-list .num { background: var(--national); color: #000; }
+        .route-section.autoroute .route-list .num { background: var(--autoroute); color: #000; }
+
+        .info-box {
+            background: var(--bg-card-light);
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            margin-top: 15px;
+        }
+
+        .info-box h4 { font-size: 0.95rem; color: var(--accent); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+        .info-box p { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 8px; }
+        .info-box p strong { color: var(--text-primary); }
+
+        .info-card h3 { font-size: 0.9rem; font-weight: 500; margin-bottom: 12px; }
+        .info-card p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; }
+
+        .error { background: #3d1f1f; color: #d4a5a5; padding: 12px 16px; border-radius: 4px; font-size: 0.85rem; display: none; border: 1px solid #5a2d2d; }
+        .error.active { display: block; }
+
+        .loading { display: none; text-align: center; padding: 30px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); }
+        .loading.active { display: block; }
+        .loading p { color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px; }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.4rem; }
+            .control-row { flex-direction: column; align-items: stretch; }
+            select, button { width: 100%; }
+            #map { height: 380px; }
+            .legend { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Senegal Trip Planner</h1>
+            <p>Planificateur d'itinéraire - 14 régions</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="control-group">
+                    <label>Départ</label>
+                    <select id="startSelect"></select>
+                </div>
+                <div class="control-group">
+                    <label>Destination</label>
+                    <select id="destinationSelect"><option value="">Sélectionner</option></select>
+                </div>
+                <button class="primary" onclick="calculateShortestPath()">Chemin optimal</button>
+                <button onclick="calculateTSP()">Circuit total</button>
+                <button onclick="resetMap()">Réinitialiser</button>
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <label>Afficher:</label>
+                    <select id="routeType" onchange="toggleRouteDisplay()">
+                        <option value="both">Les deux</option>
+                        <option value="national">Route Nationale</option>
+                        <option value="autoroute">Autoroute</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="main-content">
+            <div class="map-container"><div id="map"></div></div>
+            <div class="sidebar">
+                <div class="loading" id="loading"><p>Calcul en cours...</p></div>
+                <div class="results" id="results">
+                    <h2>Itinéraires</h2>
+                    
+                    <div class="route-section national active">
+                        <h3>🛣️ Route Nationale</h3>
+                        <div class="route-stats">
+                            <div>Distance: <span id="nationalDist">0 km</span></div>
+                        </div>
+                        <ul class="route-list" id="nationalList"></ul>
+                    </div>
+
+                    <div class="route-section autoroute active">
+                        <h3>🛞 Autoroute</h3>
+                        <div class="route-stats">
+                            <div>Distance: <span id="autorouteDist">0 km</span></div>
+                        </div>
+                        <ul class="route-list" id="autorouteList"></ul>
+                    </div>
+
+                    <div class="info-box" id="regionInfo"></div>
+                </div>
+                <div class="info-card" id="infoCard">
+                    <h3>Informations</h3>
+                    <p>Sélectionnez une destination et cliquez sur "Calculer" pour voir les deux itinéraires: route nationale et autoroute.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map, markers = {}, routeLayers = {}, regions = {};
+
+        async function initMap() {
+            map = L.map('map', { zoomControl: true }).setView([14.4974, -14.4524], 7);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(map);
+
+            try {
+                const res = await fetch('/api/regions');
+                regions = await res.json();
+            } catch (e) { console.error(e); }
+
+            Object.keys(regions).forEach(key => {
+                const r = regions[key];
+                markers[key] = L.marker([r.lat, r.lng]).addTo(map).bindPopup(`<b>${r.name}</b><br>${r.capital}`);
+            });
+
+            populateSelects();
+        }
+
+        function populateSelects() {
+            const start = document.getElementById('startSelect');
+            const dest = document.getElementById('destinationSelect');
+            Object.keys(regions).forEach(key => {
+                start.add(new Option(regions[key].name, key));
+                dest.add(new Option(regions[key].name, key));
+            });
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('error');
+            el.textContent = msg;
+            el.classList.add('active');
+            setTimeout(() => el.classList.remove('active'), 4000);
+        }
+
+        async function calculateShortestPath() {
+            const dest = document.getElementById('destinationSelect').value;
+            const start = document.getElementById('startSelect').value;
+            if (!dest) { showError('Sélectionnez une destination'); return; }
+
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+
+            try {
+                const res = await fetch(`/api/dijkstra?destination=${dest}&start=${start}`);
+                const data = await res.json();
+                
+                if (data.error) { showError(data.error); }
+                else { displayResults(data); }
+            } catch (e) { showError('Erreur de connexion'); }
+            
+            document.getElementById('loading').classList.remove('active');
+        }
+
+        async function calculateTSP() {
+            const start = document.getElementById('startSelect').value;
+
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+
+            try {
+                const res = await fetch(`/api/tsp?start=${start}`);
+                const data = await res.json();
+                
+                if (data.error) { showError(data.error); }
+                else { displayResults(data); }
+            } catch (e) { showError('Erreur de connexion'); }
+            
+            document.getElementById('loading').classList.remove('active');
+        }
+
+        function displayResults(data) {
+            const nat = data.national;
+            const aut = data.autoroute;
+
+            document.getElementById('nationalDist').textContent = nat.distance + ' km';
+            document.getElementById('autorouteDist').textContent = aut.distance + ' km';
+
+            const natList = document.getElementById('nationalList');
+            natList.innerHTML = '';
+            nat.path.forEach((key, i) => {
+                natList.innerHTML += `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span>${regions[key].name}</li>`;
+            });
+
+            const autList = document.getElementById('autorouteList');
+            autList.innerHTML = '';
+            aut.path.forEach((key, i) => {
+                autList.innerHTML += `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span>${regions[key].name}</li>`;
+            });
+
+            const dest = nat.path[nat.path.length - 1];
+            const r = regions[dest];
+            document.getElementById('regionInfo').innerHTML = `
+                <h4>${r.name}</h4>
+                <p><strong>Capitale:</strong> ${r.capital}</p>
+                <p>${r.info}</p>
+                <p><em>${r.tips}</em></p>
+            `;
+
+            drawRoutes(nat.path, aut.path);
+            window.currentRouteData = data;
+            toggleRouteDisplay();
+            document.getElementById('results').classList.add('active');
+            document.getElementById('infoCard').style.display = 'none';
+        }
+
+        function toggleRouteDisplay() {
+            const type = document.getElementById('routeType').value;
+            const natSection = document.querySelector('.route-section.national');
+            const autSection = document.querySelector('.route-section.autoroute');
+            
+            natSection.classList.remove('active');
+            autSection.classList.remove('active');
+            
+            if (type === 'both' || type === 'national') natSection.classList.add('active');
+            if (type === 'both' || type === 'autoroute') autSection.classList.add('active');
+
+            Object.values(routeLayers).forEach(l => map.removeLayer(l));
+            routeLayers = {};
+
+            const data = window.currentRouteData;
+            if (data) {
+                if (type === 'both' || type === 'national') {
+                    drawSingleRoute(data.national.path, '#3b82f6', 'national');
+                }
+                if (type === 'both' || type === 'autoroute') {
+                    drawSingleRoute(data.autoroute.path, '#f97316', 'autoroute');
+                }
+            }
+        }
+
+        window.currentRouteData = null;
+
+        async function drawRoutes(nationalPath, autoroutePath) {
+            Object.values(routeLayers).forEach(l => map.removeLayer(l));
+            routeLayers = {};
+
+            await drawSingleRoute(nationalPath, '#3b82f6', 'national');
+            await drawSingleRoute(autoroutePath, '#f97316', 'autoroute');
+        }
+
+        async function drawSingleRoute(path, color, key) {
+            if (path.length < 2) return;
+
+            const latLngs = path.map(k => [regions[k].lat, regions[k].lng]);
+            
+            const coordinates = latLngs.map(p => `${p[1]},${p[0]}`).join(';');
+            const profile = key === 'autoroute' ? 'driving' : 'driving';
+            const url = `https://router.project-osrm.org/route/v1/${profile}/${coordinates}?overview=full&geometries=geojson`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                    const routeCoords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                    routeLayers[key] = L.polyline(routeCoords, { 
+                        color: color, 
+                        weight: key === 'autoroute' ? 6 : 4, 
+                        opacity: key === 'autoroute' ? 1 : 0.7,
+                        dashArray: key === 'national' ? '10, 5' : null,
+                        lineCap: 'round'
+                    }).addTo(map);
+                } else {
+                    throw new Error('No route');
+                }
+            } catch (e) {
+                routeLayers[key] = L.polyline(latLngs, { 
+                    color: color, 
+                    weight: key === 'autoroute' ? 6 : 4, 
+                    opacity: key === 'autoroute' ? 1 : 0.7,
+                    dashArray: key === 'national' ? '10, 5' : null
+                }).addTo(map);
+            }
+
+            if (routeLayers[key]) {
+                map.fitBounds(routeLayers[key].getBounds(), { padding: [40, 40] });
+            }
+        }
+
+        function showRegionDetails(key) {
+            const r = regions[key];
+            document.getElementById('regionInfo').innerHTML = `
+                <h4>${r.name}</h4>
+                <p><strong>Capitale:</strong> ${r.capital}</p>
+                <p><strong>Coordonnées:</strong> ${r.lat}, ${r.lng}</p>
+                <p>${r.info}</p>
+                <p><em>${r.tips}</em></p>
+            `;
+            if (markers[key]) { map.setView([r.lat, r.lng], 10); markers[key].openPopup(); }
+        }
+
+        function resetMap() {
+            Object.values(routeLayers).forEach(l => map.removeLayer(l));
+            routeLayers = {};
+            document.getElementById('destinationSelect').value = '';
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('infoCard').style.display = 'block';
+            map.setView([14.4974, -14.4524], 7);
+        }
+
+        window.onload = initMap;
+    </script>
+</body>
+</html>
