@@ -405,52 +405,49 @@
         function displayResults(data) {
             const nat = data.national;
             const aut = data.autoroute;
-
-            document.getElementById('nationalDist').textContent = nat.distance;
-            document.getElementById('nationalTime').textContent = nat.time || '-';
-            document.getElementById('autorouteDist').textContent = aut.distance;
-            document.getElementById('autorouteTime').textContent = aut.time || '-';
             
-            if (nat.distance > 0) {
-                document.getElementById('results').innerHTML = `
-                    <h2>Itinéraire Calculé</h2>
-                    <p style="margin-bottom:15px;font-size:14px;color:#888">
-                        <strong>Départ:</strong> ${regions[nat.path[0]].name} → <strong>Arrivée:</strong> ${regions[nat.path[nat.path.length-1]].name}
-                    </p>
-                    
-                    <div class="route-section national">
-                        <h3>🛣️ Route Nationale</h3>
-                        <div class="route-stats">
-                            <div><strong>Distance:</strong> ${nat.distance} km</div>
-                            <div><strong>Durée estimée:</strong> ${nat.time || '-'}</div>
-                        </div>
-                        <ul class="route-list">
-                            ${nat.path.map((key, i) => `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span>${regions[key].name}</li>`).join('')}
-                        </ul>
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h2>Itinéraire Calculé</h2>
+                <p style="margin-bottom:15px;font-size:14px;color:#888">
+                    <strong>Départ:</strong> ${regions[nat.path[0]].name} → <strong>Arrivée:</strong> ${regions[nat.path[nat.path.length-1]].name}
+                </p>
+                
+                <div class="route-section national active">
+                    <h3>🛣️ Route Nationale (80 km/h)</h3>
+                    <div class="route-stats">
+                        <div><strong>Distance:</strong> ${nat.distance} km</div>
+                        <div><strong>Durée estimée:</strong> ${nat.time || '-'}</div>
                     </div>
+                    <ul class="route-list">
+                        ${nat.path.map((key, i) => `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span>${regions[key].name}</li>`).join('')}
+                    </ul>
+                </div>
 
-                    <div class="route-section autoroute">
-                        <h3>🛣️ Autoroute</h3>
-                        <div class="route-stats">
-                            <div><strong>Distance:</strong> ${aut.distance} km</div>
-                            <div><strong>Durée estimée:</strong> ${aut.time || '-'}</div>
-                        </div>
-                        <ul class="route-list">
-                            ${aut.path.map((key, i) => `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span>${regions[key].name}</li>`).join('')}
-                        </ul>
+                <div class="route-section autoroute active">
+                    <h3>🛣️ Autoroute (100 km/h)</h3>
+                    <div class="route-stats">
+                        <div><strong>Distance:</strong> ${aut.distance} km</div>
+                        <div><strong>Durée estimée:</strong> ${aut.time || '-'}</div>
                     </div>
+                    <ul class="route-list">
+                        ${aut.path.map((key, i) => `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span>${regions[key].name}</li>`).join('')}
+                    </ul>
+                </div>
 
-                    <div class="info-box">
-                        <h4>${regions[nat.path[nat.path.length-1]].name}</h4>
-                        <p><strong>Capitale:</strong> ${regions[nat.path[nat.path.length-1]].capital}</p>
-                        <p>${regions[nat.path[nat.path.length-1]].info}</p>
-                        <p><strong>Conseil:</strong> ${regions[nat.path[nat.path.length-1]].tips || '-'}</p>
-                        <p><strong>Sécurité:</strong> ${regions[nat.path[nat.path.length-1]].security || '-'}</p>
-                        <p><strong>Hébergement:</strong> ${regions[nat.path[nat.path.length-1]].hebergement || '-'}</p>
-                        <p><strong>Tourisme:</strong> ${regions[nat.path[nat.path.length-1]].tourisme || '-'}</p>
-                    </div>
-                `;
-            }
+                <div class="info-box">
+                    <h4>${regions[nat.path[nat.path.length-1]].name}</h4>
+                    <p><strong>Capitale:</strong> ${regions[nat.path[nat.path.length-1]].capital}</p>
+                    <p>${regions[nat.path[nat.path.length-1]].info}</p>
+                    <p><strong>Conseil:</strong> ${regions[nat.path[nat.path.length-1]].tips || '-'}</p>
+                    <p><strong>Sécurité:</strong> ${regions[nat.path[nat.path.length-1]].security || '-'}</p>
+                    <p><strong>Hébergement:</strong> ${regions[nat.path[nat.path.length-1]].hebergement || '-'}</p>
+                    <p><strong>Tourisme:</strong> ${regions[nat.path[nat.path.length-1]].tourisme || '-'}</p>
+                </div>
+            `;
+            
+            resultsDiv.classList.add('active');
+            document.getElementById('infoCard').style.display = 'none';
 
             window.currentRouteData = data;
             map.eachLayer(function(layer) {
@@ -460,9 +457,6 @@
             });
             routeLayers = {};
             drawRoutes(nat.path, aut.path);
-            toggleRouteDisplay();
-            document.getElementById('results').classList.add('active');
-            document.getElementById('infoCard').style.display = 'none';
         }
 
         function toggleRouteDisplay() {
