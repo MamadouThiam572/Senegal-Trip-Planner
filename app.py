@@ -151,68 +151,119 @@ def api_dijkstra():
     })
 
 
+def calculate_path_distance(path, matrix):
+    """Calculate total distance of a path."""
+    total = 0
+    for i in range(len(path) - 1):
+        if matrix[path[i]][path[i+1]] < 9999:
+            total += matrix[path[i]][path[i+1]]
+    return total
+
+
+def tsp_nearest_neighbor(matrix, start):
+    """
+    Phase 1: Nearest Neighbor Algorithm.
+    Generates initial solution by always visiting the nearest unvisited city.
+    
+    Algorithm:
+    1. Start from given city
+    2. Repeatedly visit the nearest unvisited city
+    3. Return to start when all cities visited
+    
+    Time Complexity: O(n²) where n = number of cities
+    """
+    visited = {start}
+    path = [start]
+    current = start
+    unvisited = set(all_regions) - {start}
+
+    while unvisited:
+        candidates = [(x, matrix[current][x]) for x in unvisited if 0 < matrix[current][x] < 9999]
+        if not candidates:
+            candidates = [(x, matrix[x][current]) for x in unvisited if 0 < matrix[x][current] < 9999]
+        if not candidates:
+            break
+        nearest = min(candidates, key=lambda x: x[1])[0]
+        path.append(nearest)
+        visited.add(nearest)
+        unvisited.remove(nearest)
+        current = nearest
+
+    if 0 < matrix[current][start] < 9999:
+        path.append(start)
+    return path
+
+
+def two_opt_optimize(path, matrix, max_iterations=300):
+    """
+    Phase 2: 2-opt Local Search Optimization.
+    Improves initial solution by removing crossing edges.
+    
+    Algorithm:
+    1. Remove two edges (i,i+1) and (j,j+1)
+    2. Reconnect in opposite order to form new path
+    3. Repeat until no improvement found
+    
+    Time Complexity: O(n² * iterations)
+    """
+    if len(path) < 4:
+        return path
+    
+    improved = True
+    iteration = 0
+    best_path = path[:-1].copy()
+    
+    while improved and iteration < max_iterations:
+        improved = False
+        iteration += 1
+        best_distance = calculate_path_distance(best_path, matrix)
+        
+        for i in range(1, len(best_path) - 1):
+            for j in range(i + 1, len(best_path)):
+                new_path = best_path[:i] + best_path[i:j+1][::-1] + best_path[j+1:]
+                new_distance = calculate_path_distance(new_path, matrix)
+                
+                if new_distance < best_distance:
+                    best_path = new_path
+                    best_distance = new_distance
+                    improved = True
+                    break
+            if improved:
+                break
+    
+    best_path.append(best_path[0])
+    return best_path
+
+
+def two_phase_tsp(matrix, start):
+    """
+    Two-Phase TSP Algorithm:
+    - Phase 1: Nearest Neighbor (initial solution)
+    - Phase 2: 2-opt (optimization)
+    
+    Returns optimized path and total distance.
+    """
+    initial_path = tsp_nearest_neighbor(matrix, start)
+    optimized_path = two_opt_optimize(initial_path, matrix)
+    total_distance = calculate_path_distance(optimized_path, matrix)
+    
+    return optimized_path, round(total_distance)
+
+
 @app.route('/api/tsp')
 def api_tsp():
+    """TSP API endpoint - returns optimized circuit visiting all regions."""
     start = request.args.get('start', 'dakar')
     
     if start not in all_regions:
         return jsonify({"error": "Point de départ invalide"}), 400
     
-    def tsp_nearest(matrix):
-        visited = {start}
-        path = [start]
-        current = start
-        unvisited = set(all_regions) - {start}
-
-        while unvisited:
-            candidates = [(x, matrix[current][x]) for x in unvisited if 0 < matrix[current][x] < 9999]
-            if not candidates:
-                candidates = [(x, matrix[x][current]) for x in unvisited if 0 < matrix[x][current] < 9999]
-            if not candidates:
-                break
-            nearest = min(candidates, key=lambda x: x[1])[0]
-            path.append(nearest)
-            visited.add(nearest)
-            unvisited.remove(nearest)
-            current = nearest
-
-        if 0 < matrix[current][start] < 9999:
-            path.append(start)
-        return path
-
-    def two_opt(path, matrix, max_iterations=300):
-        if len(path) < 4:
-            return path
-        improved = True
-        iteration = 0
-        best_path = path[:-1].copy()
-        while improved and iteration < max_iterations:
-            improved = False
-            iteration += 1
-            for i in range(1, len(best_path) - 1):
-                for j in range(i + 1, len(best_path)):
-                    new_path = best_path[:i] + best_path[i:j+1][::-1] + best_path[j+1:]
-                    if sum(matrix[new_path[k]][new_path[k+1]] for k in range(len(new_path)-1) if matrix[new_path[k]][new_path[k+1]] < 9999) < sum(matrix[best_path[k]][best_path[k+1]] for k in range(len(best_path)-1) if matrix[best_path[k]][best_path[k+1]] < 9999):
-                        best_path = new_path
-                        improved = True
-                        break
-                if improved:
-                    break
-        best_path.append(best_path[0])
-        return best_path
-
-    path_national = tsp_nearest(road_matrix_national)
-    path_autoroute = tsp_nearest(road_matrix_autoroute)
-    
-    optimized_national = two_opt(path_national, road_matrix_national)
-    optimized_autoroute = two_opt(path_autoroute, road_matrix_autoroute)
-    
-    dist_national = sum(road_matrix_national[optimized_national[i]][optimized_national[i+1]] for i in range(len(optimized_national)-1))
-    dist_autoroute = sum(road_matrix_autoroute[optimized_autoroute[i]][optimized_autoroute[i+1]] for i in range(len(optimized_autoroute)-1))
+    path_national, dist_national = two_phase_tsp(road_matrix_national, start)
+    path_autoroute, dist_autoroute = two_phase_tsp(road_matrix_autoroute, start)
     
     return jsonify({
-        "national": {"path": optimized_national, "distance": round(dist_national)},
-        "autoroute": {"path": optimized_autoroute, "distance": round(dist_autoroute)}
+        "national": {"path": path_national, "distance": dist_national},
+        "autoroute": {"path": path_autoroute, "distance": dist_autoroute}
     })
 
 

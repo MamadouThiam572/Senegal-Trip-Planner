@@ -43,15 +43,29 @@ Les distances sont-stockees dans deux matrices distinctes permettant de comparer
 
 ### Dijkstra (Itinéraire le plus court)
 
-L'algorithme de Dijkstra est implémente pour trouver le chemin le plus court entre deux regions. Il utilise une approche gloutonne avec une file de priorite pour explorer les nœœuds par distance croissante.
+L'algorithme de Dijkstra est implémente pour trouver le chemin le plus court entre deux regions. Il utilise une approche gloutonne avec exploration des nœœuds par distance croissante.
 
-### TSP (Problème du voyageur de commerce)
+Complexité : O(V²) où V = nombre de régions
 
-Pour le circuit touristique, l'application utilise :
-1. **Nearest Neighbor** — Construction initiale d'un parcours
-2. **2-opt** — Optimisation locale pour améliorer le parcours
+### Two-Phase TSP (Problème du voyageur de commerce)
 
-Cette combinaison permet d'obtenir un bon compromis entre qualité de la solution et temps de calcul.
+L'algorithme TSP utilise une approche en deux phases :
+
+**Phase 1 : Nearest Neighbor (Construction)**
+- Commencer depuis une région de départ
+- Visite répété la région non visitée la plus proche
+- Retour au point de départ une fois toutes les régions visitées
+
+Complexité : O(n²) où n = nombre de régions
+
+**Phase 2 : 2-opt (Optimisation locale)**
+- Supprimer deux arêtes du parcours
+- Les reconnecter en sens inverse
+- Répéter jusqu'à aucune amélioration
+
+Complexité : O(n² × itérations)
+
+Cette approche hybride permet d'obtenir un bon compromis entre qualité de la solution et temps de calcul.
 
 ## Installation
 
