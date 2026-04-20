@@ -1,122 +1,23 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
+from flask import Flask, render_template, jsonify, request
 import math
-import urllib.request
-import json
+
+app = Flask(__name__)
 
 regions = {
-    "dakar": {
-        "name": "Dakar", "capital": "Dakar", "lat": 14.7167, "lng": -17.4671,
-        "info": "Capitale du Sénégal, plus grande ville et centre économique.",
-        "tips": "Préférez les taxis officiels. Évitez les nuits tardives.",
-        "security": "Zone sécurisée, mais vigilance recommandée la nuit.",
-        "hebergement": "Hôtels: Radisson, Terrou Bi. Budget: 15000-150000 CFA/nuit.",
-        "tourisme": "Île de Gorée, Musée Théodore Monod, Plateau."
-    },
-    "thies": {
-        "name": "Thiès", "capital": "Thiès", "lat": 14.7941, "lng": -16.9639,
-        "info": "Deuxième ville, pôle industriel et artisanale.",
-        "tips": "Visitez les villages artisanaux de Rufisque.",
-        "security": "Zone calme, respectez les us et coutumes locaux.",
-        "hebergement": "Hôtel La Résidence. Budget: 8000-50000 CFA/nuit.",
-        "tourisme": "Artisanat du tissu, villages traditionnels."
-    },
-    "diourbel": {
-        "name": "Diourbel", "capital": "Diourbel", "lat": 14.7167, "lng": -16.2333,
-        "info": "Capitale du Mboss, importante région religieuse.",
-        "tips": "Respectez les lieux saints et horaires de prière.",
-        "security": "Zone très pieuse, habillez-vous convenablement.",
-        "hebergement": "Auberge du Roi. Budget: 5000-25000 CFA/nuit.",
-        "tourisme": "Tombe de Bayam Nguidjam, marché central."
-    },
-    "kaolack": {
-        "name": "Kaolack", "capital": "Kaolack", "lat": 14.1500, "lng": -16.0833,
-        "info": "Centre économique du bassin arachidier.",
-        "tips": "Marchandez dans les marchés, négociez les prix.",
-        "security": "Zone commerciale animée, surveillez vos affaires.",
-        "hebergement": "Hôtel Le Kaolack. Budget: 6000-30000 CFA/nuit.",
-        "tourisme": "Marché hebdomadaire, agriculture arachidière."
-    },
-    "saintlouis": {
-        "name": "Saint-Louis", "capital": "Saint-Louis", "lat": 16.0333, "lng": -16.5000,
-        "info": "Ancienne capitale coloniale, patrimoine UNESCO.",
-        "tips": "Explorez l'architecture coloniale française.",
-        "security": "Zone historique sécurisée, mais prudence près du fleuve.",
-        "hebergement": "Hôtel Mermoz, Maison Bleue. Budget: 10000-80000 CFA/nuit.",
-        "tourisme": "Île Saint-Louis, Rue Gradolphe, Palais Ghadene."
-    },
-    "louga": {
-        "name": "Louga", "capital": "Louga", "lat": 15.6333, "lng": -15.6333,
-        "info": "Région sahélienne, élevage et commerce.",
-        "tips": "Découvrez la culture peule traditionnelle.",
-        "security": "Zone reculée, évitez les zones frontalières.",
-        "hebergement": "Hôtel de Louga. Budget: 4000-15000 CFA/nuit.",
-        "tourisme": "Marché pastoral, villages peuls."
-    },
-    "kolda": {
-        "name": "Kolda", "capital": "Kolda", "lat": 12.8833, "lng": -14.9500,
-        "info": "Région verdoyante au sud du pays.",
-        "tips": "Préférez la saison sèche (Nov-Mai) pour visiter.",
-        "security": "Zone rurale, restreignez vos déplacements la nuit.",
-        "hebergement": "Auberge de Kolda. Budget: 5000-20000 CFA/nuit.",
-        "tourisme": "Nature, fleuve Casamance."
-    },
-    "ziguinchor": {
-        "name": "Ziguinchor", "capital": "Ziguinchor", "lat": 12.5833, "lng": -16.2667,
-        "info": "Capitale du sud, vibes caribéennes.",
-        "tips": "Prenez le bateau pour les îles du Saloum.",
-        "security": "Zone touristique sécurisée, mais évitez les zones frontalières.",
-        "hebergement": "Hôtel Kadiandouane, Auberge du Sud. Budget: 10000-60000 CFA/nuit.",
-        "tourisme": "Plages, Île de Carabane, mangrove."
-    },
-    "sedhiou": {
-        "name": "Sédhiou", "capital": "Sédhiou", "lat": 12.7167, "lng": -15.1833,
-        "info": "Zone de transition entre Sine et Saloum.",
-        "tips": "Visitez les villages historiques de la région.",
-        "security": "Zone calme, respectez les coutumes locales.",
-        "hebergement": "Hôtel de Sédhiou. Budget: 4000-15000 CFA/nuit.",
-        "tourisme": "Villages traditionnels, histoire locale."
-    },
-    "kaffrine": {
-        "name": "Kaffrine", "capital": "Kaffrine", "lat": 14.1000, "lng": -15.4167,
-        "info": "Région agricole du bassin arachidier, cœur du pays Serer.",
-        "tips": "Découvrez la culture Serer traditionnelle.",
-        "security": "Zone rurale paisible.",
-        "hebergement": "Auberge de Kaffrine. Budget: 3000-10000 CFA/nuit.",
-        "tourisme": "Sites sacrés Serer, agriculture."
-    },
-    "kedougou": {
-        "name": "Kédougou", "capital": "Kédougou", "lat": 12.5667, "lng": -12.1833,
-        "info": "Plus orientale, réserve nationale Niokolo-Koba.",
-        "tips": "Parc National pour safari photos. Réservez un guide.",
-        "security": "Zone de parc, accompagnés toujours d'un guide.",
-        "hebergement": "Lodge Campement. Budget: 15000-60000 CFA/nuit.",
-        "tourisme": "Safari, éléphants, lions, parc Niokolo-Koba."
-    },
-    "matam": {
-        "name": "Matam", "capital": "Matam", "lat": 15.6667, "lng": -13.2667,
-        "info": "Région sahélienne sur le fleuve Niger.",
-        "tips": "Essayez la traversée en pirogue sur le fleuve.",
-        "security": "Zone reculée, évitez les déplacements nocturnes.",
-        "hebergement": "Hôtel de Matam. Budget: 5000-20000 CFA/nuit.",
-        "tourisme": "Fleuve Niger, pirogues, culture Peul."
-    },
-    "tamba": {
-        "name": "Tambacounda", "capital": "Tambacounda", "lat": 13.7667, "lng": -13.6667,
-        "info": "Plus grande région, porte du Sahel.",
-        "tips": "Prévoyez un 4x4 pour les pistes rurales.",
-        "security": "Zone vaste, restez sur les routes principales.",
-        "hebergement": "Hôtel TAM. Budget: 6000-25000 CFA/nuit.",
-        "tourisme": "Parc Niokolo-Koba, brousse, faune."
-    },
-    "fatick": {
-        "name": "Fatick", "capital": "Fatick", "lat": 14.3333, "lng": -16.0833,
-        "info": "Région Sine-Saloum, lagunes et mangroves.",
-        "tips": "Visitez l'île de Joal-Fadiouth. Mélangez-vous à la population.",
-        "security": "Zone touristique calme.",
-        "hebergement": "Auberge de Fatick. Budget: 5000-30000 CFA/nuit.",
-        "tourisme": "Île de Joal-Fadiouth, mangroves, ossature de poisson."
-    }
+    "dakar": {"name": "Dakar", "capital": "Dakar", "lat": 14.7167, "lng": -17.4671, "info": "Capitale du Sénégal.", "tips": "Préférez les taxis officiels."},
+    "thies": {"name": "Thiès", "capital": "Thiès", "lat": 14.7941, "lng": -16.9639, "info": "Deuxième ville, pôle industriel.", "tips": "Villages artisanaux."},
+    "diourbel": {"name": "Diourbel", "capital": "Diourbel", "lat": 14.7167, "lng": -16.2333, "info": "Capitale du Mboss, région religieuse.", "tips": "Respectez les lieux saints."},
+    "kaolack": {"name": "Kaolack", "capital": "Kaolack", "lat": 14.1500, "lng": -16.0833, "info": "Centre économique du bassin arachidier.", "tips": "Marchandez dans les marchés."},
+    "saintlouis": {"name": "Saint-Louis", "capital": "Saint-Louis", "lat": 16.0333, "lng": -16.5000, "info": "Ancienne capitale coloniale, patrimoine UNESCO.", "tips": "Architecture coloniale."},
+    "louga": {"name": "Louga", "capital": "Louga", "lat": 15.6333, "lng": -15.6333, "info": "Région sahélienne, élevage et commerce.", "tips": "Culture peule traditionnelle."},
+    "kolda": {"name": "Kolda", "capital": "Kolda", "lat": 12.8833, "lng": -14.9500, "info": "Région verdoyante au sud.", "tips": "Préférez la saison sèche."},
+    "ziguinchor": {"name": "Ziguinchor", "capital": "Ziguinchor", "lat": 12.5833, "lng": -16.2667, "info": "Capitale du sud, vibes caribéennes.", "tips": "Bateau pour les îles."},
+    "sedhiou": {"name": "Sédhiou", "capital": "Sédhiou", "lat": 12.7167, "lng": -15.1833, "info": "Transition Sine et Saloum.", "tips": "Villages historiques."},
+    "kaffrine": {"name": "Kaffrine", "capital": "Kaffrine", "lat": 14.1000, "lng": -15.4167, "info": "Région agricole du bassin arachidier.", "tips": "Cœur du pays Serer."},
+    "kedougou": {"name": "Kédougou", "capital": "Kédougou", "lat": 12.5667, "lng": -12.1833, "info": "Plus orientale, réserve Niokolo-Koba.", "tips": "Parc National pour safari."},
+    "matam": {"name": "Matam", "capital": "Matam", "lat": 15.6667, "lng": -13.2667, "info": "Sahélienne sur le fleuve Niger.", "tips": "Traversée en pirogue."},
+    "tamba": {"name": "Tambacounda", "capital": "Tambacounda", "lat": 13.7667, "lng": -13.6667, "info": "Plus grande région, porte du Sahel.", "tips": "Prévoyez un 4x4."},
+    "fatick": {"name": "Fatick", "capital": "Fatick", "lat": 14.3333, "lng": -16.0833, "info": "Sine-Saloum, lagunes et mangroves.", "tips": "Île de Joal-Fadiouth."}
 }
 
 all_regions = list(regions.keys())
@@ -191,10 +92,6 @@ road_matrix_autoroute = build_matrix(distances_autoroute)
 
 
 def dijkstra(start, end, matrix):
-    """
-    Algorithme de Dijkstra - Trouve le chemin le plus court.
-    Complexité: O(V²) où V = nombre de régions
-    """
     dist = {r: 9999 for r in all_regions}
     prev = {r: None for r in all_regions}
     dist[start] = 0
@@ -227,414 +124,97 @@ def dijkstra(start, end, matrix):
     return path, round(dist[end]) if dist[end] < 9999 else 0
 
 
-def calculate_path_distance(path, matrix):
-    """Calcule la distance totale d'un parcours."""
-    total = 0
-    for i in range(len(path) - 1):
-        if matrix[path[i]][path[i+1]] < 9999:
-            total += matrix[path[i]][path[i+1]]
-    return total
+@app.route('/')
+def index():
+    return render_template('index.html', regions=regions)
 
 
-def tsp_nearest_neighbor(matrix, start):
-    """
-    Phase 1: Nearest Neighbor Algorithm.
-    Génère une solution initiale en visitant toujours la ville la plus proche.
-    Complexité: O(n²) où n = nombre de régions
-    """
-    visited = {start}
-    path = [start]
-    current = start
-    unvisited = set(all_regions) - {start}
-
-    while unvisited:
-        candidates = [(x, matrix[current][x]) for x in unvisited if 0 < matrix[current][x] < 9999]
-        if not candidates:
-            candidates = [(x, matrix[x][current]) for x in unvisited if 0 < matrix[x][current] < 9999]
-        if not candidates:
-            break
-        nearest = min(candidates, key=lambda x: x[1])[0]
-        path.append(nearest)
-        visited.add(nearest)
-        unvisited.remove(nearest)
-        current = nearest
-
-    if 0 < matrix[current][start] < 9999:
-        path.append(start)
-    return path
+@app.route('/api/regions')
+def get_regions():
+    return jsonify(regions)
 
 
-def two_opt_optimize(path, matrix, max_iterations=300):
-    """
-    Phase 2: 2-opt Local Search Optimization.
-    Améliore la solution initiale en supprimant les arêtes croisées.
-    Complexité: O(n² × itérations)
-    """
-    if len(path) < 4:
-        return path
+@app.route('/api/dijkstra')
+def api_dijkstra():
+    destination = request.args.get('destination')
+    start = request.args.get('start', 'dakar')
     
-    improved = True
-    iteration = 0
-    best_path = path[:-1].copy()
+    if not destination or start not in all_regions or destination not in all_regions:
+        return jsonify({"error": "Paramètres invalides"}), 400
     
-    while improved and iteration < max_iterations:
-        improved = False
-        iteration += 1
-        best_distance = calculate_path_distance(best_path, matrix)
-        
-        for i in range(1, len(best_path) - 1):
-            for j in range(i + 1, len(best_path)):
-                new_path = best_path[:i] + best_path[i:j+1][::-1] + best_path[j+1:]
-                new_distance = calculate_path_distance(new_path, matrix)
-                
-                if new_distance < best_distance:
-                    best_path = new_path
-                    best_distance = new_distance
-                    improved = True
-                    break
-            if improved:
+    path_national, dist_national = dijkstra(start, destination, road_matrix_national)
+    path_autoroute, dist_autoroute = dijkstra(start, destination, road_matrix_autoroute)
+    
+    return jsonify({
+        "national": {"path": path_national, "distance": dist_national},
+        "autoroute": {"path": path_autoroute, "distance": dist_autoroute}
+    })
+
+
+@app.route('/api/tsp')
+def api_tsp():
+    start = request.args.get('start', 'dakar')
+    
+    if start not in all_regions:
+        return jsonify({"error": "Point de départ invalide"}), 400
+    
+    def tsp_nearest(matrix):
+        visited = {start}
+        path = [start]
+        current = start
+        unvisited = set(all_regions) - {start}
+
+        while unvisited:
+            candidates = [(x, matrix[current][x]) for x in unvisited if 0 < matrix[current][x] < 9999]
+            if not candidates:
+                candidates = [(x, matrix[x][current]) for x in unvisited if 0 < matrix[x][current] < 9999]
+            if not candidates:
                 break
+            nearest = min(candidates, key=lambda x: x[1])[0]
+            path.append(nearest)
+            visited.add(nearest)
+            unvisited.remove(nearest)
+            current = nearest
+
+        if 0 < matrix[current][start] < 9999:
+            path.append(start)
+        return path
+
+    def two_opt(path, matrix, max_iterations=300):
+        if len(path) < 4:
+            return path
+        improved = True
+        iteration = 0
+        best_path = path[:-1].copy()
+        while improved and iteration < max_iterations:
+            improved = False
+            iteration += 1
+            for i in range(1, len(best_path) - 1):
+                for j in range(i + 1, len(best_path)):
+                    new_path = best_path[:i] + best_path[i:j+1][::-1] + best_path[j+1:]
+                    if sum(matrix[new_path[k]][new_path[k+1]] for k in range(len(new_path)-1) if matrix[new_path[k]][new_path[k+1]] < 9999) < sum(matrix[best_path[k]][best_path[k+1]] for k in range(len(best_path)-1) if matrix[best_path[k]][best_path[k+1]] < 9999):
+                        best_path = new_path
+                        improved = True
+                        break
+                if improved:
+                    break
+        best_path.append(best_path[0])
+        return best_path
+
+    path_national = tsp_nearest(road_matrix_national)
+    path_autoroute = tsp_nearest(road_matrix_autoroute)
     
-    best_path.append(best_path[0])
-    return best_path
+    optimized_national = two_opt(path_national, road_matrix_national)
+    optimized_autoroute = two_opt(path_autoroute, road_matrix_autoroute)
+    
+    dist_national = sum(road_matrix_national[optimized_national[i]][optimized_national[i+1]] for i in range(len(optimized_national)-1))
+    dist_autoroute = sum(road_matrix_autoroute[optimized_autoroute[i]][optimized_autoroute[i+1]] for i in range(len(optimized_autoroute)-1))
+    
+    return jsonify({
+        "national": {"path": optimized_national, "distance": round(dist_national)},
+        "autoroute": {"path": optimized_autoroute, "distance": round(dist_autoroute)}
+    })
 
 
-def two_phase_tsp(matrix, start):
-    """
-    Algorithme TSP en deux phases:
-    - Phase 1: Nearest Neighbor (solution initiale)
-    - Phase 2: 2-opt (optimisation)
-    """
-    initial_path = tsp_nearest_neighbor(matrix, start)
-    optimized_path = two_opt_optimize(initial_path, matrix)
-    total_distance = calculate_path_distance(optimized_path, matrix)
-    
-    return optimized_path, round(total_distance)
-
-
-def format_time(hours):
-    h = int(hours)
-    m = int((hours - h) * 60)
-    if h > 0:
-        return f"{h}h {m}min"
-    return f"{m}min"
-
-
-def get_osrm_route(path):
-    """Récupère l'itinéraire réel depuis OSRM."""
-    if len(path) < 2:
-        return []
-    
-    coordinates = []
-    for region in path:
-        r = regions[region]
-        coordinates.append(f"{r['lng']},{r['lat']}")
-    
-    coords_str = ";".join(coordinates)
-    url = f"https://router.project-osrm.org/route/v1/driving/{coords_str}?overview=full&geometries=geojson"
-    
-    try:
-        with urllib.request.urlopen(url, timeout=10) as response:
-            data = json.loads(response.read().decode())
-        
-        if data.get('code') == 'Ok' and data.get('routes'):
-            return data['routes'][0]['geometry']['coordinates']
-    except Exception as e:
-        print(f"Erreur OSRM: {e}")
-    
-    return []
-
-
-class SenegalTripPlannerApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Senegal Trip Planner - Planificateur d'itinéraire")
-        self.root.geometry("1100x750")
-        self.root.configure(bg="#1a1a2e")
-        
-        self.selected_path_national = []
-        self.selected_path_autoroute = []
-        
-        self.setup_ui()
-    
-    def get_region_names(self):
-        return [regions[k]['name'] for k in regions.keys()]
-    
-    def get_region_key_from_name(self, name):
-        for k, v in regions.items():
-            if v['name'] == name:
-                return k
-        return name
-    
-    def setup_ui(self):
-        header = tk.Frame(self.root, bg="#1a1a2e")
-        header.pack(pady=15)
-        
-        tk.Label(header, text="SENEGAL TRIP PLANNER", font=("Arial", 20, "bold"), 
-               bg="#1a1a2e", fg="#e8e8e8").pack()
-        tk.Label(header, text="Planificateur d'itinéraire - 14 régions du Sénégal", 
-               font=("Arial", 11), bg="#1a1a2e", fg="#a0a0a0").pack()
-        
-        controls = tk.Frame(self.root, bg="#16213e", padx=20, pady=15)
-        controls.pack(fill="x", padx=20)
-        
-        region_names = self.get_region_names()
-        
-        tk.Label(controls, text="Départ:", bg="#16213e", fg="#e8e8e8", font=("Arial", 10)).grid(row=0, column=0, padx=5)
-        self.start_var = tk.StringVar(value="Dakar")
-        self.start_combo = ttk.Combobox(controls, textvariable=self.start_var, 
-                                      values=region_names, state="readonly", width=18, font=("Arial", 10))
-        self.start_combo.grid(row=0, column=1, padx=5)
-        
-        tk.Label(controls, text="Destination:", bg="#16213e", fg="#e8e8e8", font=("Arial", 10)).grid(row=0, column=2, padx=5)
-        self.dest_var = tk.StringVar()
-        self.dest_combo = ttk.Combobox(controls, textvariable=self.dest_var, 
-                                     values=region_names, state="readonly", width=18, font=("Arial", 10))
-        self.dest_combo.grid(row=0, column=3, padx=5)
-        
-        btn_dijkstra = tk.Button(controls, text="Chemin optimal (Dijkstra)", command=self.calculate_dijkstra,
-                bg="#3b82f6", fg="white", font=("Arial", 10, "bold"), padx=10, pady=5)
-        btn_dijkstra.grid(row=0, column=4, padx=10)
-        
-        btn_tsp = tk.Button(controls, text="Circuit total (TSP)", command=self.calculate_tsp,
-                bg="#f97316", fg="white", font=("Arial", 10, "bold"), padx=10, pady=5)
-        btn_tsp.grid(row=0, column=5, padx=10)
-        
-        btn_reset = tk.Button(controls, text="Réinitialiser", command=self.reset,
-                bg="#2a3a5a", fg="white", font=("Arial", 10), padx=10, pady=5)
-        btn_reset.grid(row=0, column=6, padx=10)
-        
-        main = tk.Frame(self.root, bg="#1a1a2e")
-        main.pack(fill="both", expand=True, padx=20, pady=10)
-        
-        results_frame = tk.Frame(main, bg="#16213e", padx=15, pady=15)
-        results_frame.pack(side="left", fill="both", expand=True)
-        
-        tk.Label(results_frame, text="ITINÉRAIRES", font=("Arial", 12, "bold"),
-              bg="#16213e", fg="#e8e8e8").pack(anchor="w")
-        
-        self.national_label = tk.Label(results_frame, text="Route Nationale: -",
-                                    font=("Arial", 10, "bold"), bg="#16213e", fg="#3b82f6", 
-                                    justify="left", anchor="w")
-        self.national_label.pack(anchor="w", pady=(10, 5), fill="x")
-        
-        self.national_list = tk.Listbox(results_frame, height=8, bg="#1f2b47", fg="#e8e8e8", font=("Arial", 9))
-        self.national_list.pack(fill="x", pady=5)
-        
-        self.autoroute_label = tk.Label(results_frame, text="Autoroute: -",
-                                     font=("Arial", 10, "bold"), bg="#16213e", fg="#f97316", 
-                                     justify="left", anchor="w")
-        self.autoroute_label.pack(anchor="w", pady=(10, 5), fill="x")
-        
-        self.autoroute_list = tk.Listbox(results_frame, height=8, bg="#1f2b47", fg="#e8e8e8", font=("Arial", 9))
-        self.autoroute_list.pack(fill="x", pady=5)
-        
-        canvas_frame = tk.Frame(main, bg="#16213e", padx=15, pady=15)
-        canvas_frame.pack(side="right", fill="both", expand=True)
-        
-        tk.Label(canvas_frame, text="CARTE DU SÉNÉGAL", font=("Arial", 12, "bold"),
-              bg="#16213e", fg="#e8e8e8").pack(anchor="w")
-        
-        self.canvas = tk.Canvas(canvas_frame, width=450, height=450, bg="#0d1526", highlightthickness=0)
-        self.canvas.pack(pady=10)
-        self.draw_map()
-        
-        info_frame = tk.Frame(main, bg="#16213e", padx=15, pady=15)
-        info_frame.pack(side="right", fill="both", expand=True)
-        
-        tk.Label(info_frame, text="INFORMATIONS", font=("Arial", 12, "bold"),
-              bg="#16213e", fg="#e8e8e8").pack(anchor="w")
-        
-        info_scroll = tk.Scrollbar(info_frame)
-        info_scroll.pack(side="right", fill="y")
-        
-        self.info_text = tk.Text(info_frame, height=20, width=38, bg="#1f2b47", fg="#e8e8e8",
-                               font=("Arial", 9), yscrollcommand=info_scroll.set)
-        self.info_text.pack(fill="both", expand=True, pady=10)
-        info_scroll.config(command=self.info_text.yview)
-        self.info_text.insert("1.0", "Sélectionnez une destination et cliquez sur 'Chemin optimal' (Dijkstra) pour un itinéraire vers une destination,\nou sur 'Circuit total' (TSP) pour visiter toutes les régions.")
-        
-        self.start_combo.bind("<<ComboboxSelected>>", self.on_region_select)
-        self.dest_combo.bind("<<ComboboxSelected>>", self.on_dest_select)
-    
-    def draw_map(self, path_national=None, path_autoroute=None, real_nat=None, real_aut=None):
-        self.canvas.delete("all")
-        
-        min_lat = min(regions[k]['lat'] for k in regions) - 0.5
-        max_lat = max(regions[k]['lat'] for k in regions) + 0.5
-        min_lng = min(regions[k]['lng'] for k in regions) - 0.5
-        max_lng = max(regions[k]['lng'] for k in regions) + 0.5
-        
-        width = 450
-        height = 450
-        padding = 50
-        
-        self.canvas.config(width=width, height=height)
-        
-        def map_coords(lat, lng):
-            x = padding + (lng - min_lng) / (max_lng - min_lng) * (width - 2 * padding)
-            y = height - padding - (lat - min_lat) / (max_lat - min_lat) * (height - 2 * padding)
-            return x, y
-        
-        for key, r in regions.items():
-            x, y = map_coords(r['lat'], r['lng'])
-            self.canvas.create_oval(x-8, y-8, x+8, y+8, fill="#1f2b47", outline="#4a90a4", width=2)
-            self.canvas.create_oval(x-4, y-4, x+4, y+4, fill="#4a90a4", outline="#e8e8e8")
-            self.canvas.create_text(x+12, y, text=r['capital'], fill="#e8e8e8", font=("Arial", 8, "bold"), anchor="w")
-        
-        if real_nat and len(real_nat) > 1:
-            for i in range(len(real_nat) - 1):
-                x1, y1 = map_coords(real_nat[i][1], real_nat[i][0])
-                x2, y2 = map_coords(real_nat[i+1][1], real_nat[i+1][0])
-                self.canvas.create_line(x1, y1, x2, y2, fill="#3b82f6", width=3)
-        
-        if path_national and len(path_national) > 1 and not real_nat:
-            for i in range(len(path_national) - 1):
-                r1 = regions[path_national[i]]
-                r2 = regions[path_national[i + 1]]
-                x1, y1 = map_coords(r1['lat'], r1['lng'])
-                x2, y2 = map_coords(r2['lat'], r2['lng'])
-                self.canvas.create_line(x1, y1, x2, y2, fill="#3b82f6", width=2, dash=(5, 3))
-        
-        if path_autoroute and len(path_autoroute) > 1 and not real_aut:
-            for i in range(len(path_autoroute) - 1):
-                r1 = regions[path_autoroute[i]]
-                r2 = regions[path_autoroute[i + 1]]
-                x1, y1 = map_coords(r1['lat'], r1['lng'])
-                x2, y2 = map_coords(r2['lat'], r2['lng'])
-                self.canvas.create_line(x1, y1, x2, y2, fill="#f97316", width=2, dash=(5, 3))
-        
-        if real_aut and len(real_aut) > 1:
-            for i in range(len(real_aut) - 1):
-                x1, y1 = map_coords(real_aut[i][1], real_aut[i][0])
-                x2, y2 = map_coords(real_aut[i+1][1], real_aut[i+1][0])
-                self.canvas.create_line(x1, y1, x2, y2, fill="#f97316", width=3)
-        
-        if path_autoroute and len(path_autoroute) > 1 and not real_aut:
-            for i in range(len(path_autoroute) - 1):
-                r1 = regions[path_autoroute[i]]
-                r2 = regions[path_autoroute[i + 1]]
-                x1, y1 = map_coords(r1['lat'], r1['lng'])
-                x2, y2 = map_coords(r2['lat'], r2['lng'])
-                self.canvas.create_line(x1, y1, x2, y2, fill="#f97316", width=2, dash=(5, 3))
-        
-        legend_y = height - 15
-        self.canvas.create_text(20, legend_y, text="━ Bleu: Route Nationale", fill="#3b82f6", font=("Arial", 8), anchor="w")
-        self.canvas.create_text(200, legend_y, text="━ Orange: Autoroute (réel)", fill="#f97316", font=("Arial", 8), anchor="w")
-    
-    def on_region_select(self, event):
-        key = self.get_region_key_from_name(self.start_var.get())
-        self.show_region_info(key)
-    
-    def on_dest_select(self, event):
-        dest = self.dest_var.get()
-        if dest:
-            key = self.get_region_key_from_name(dest)
-            self.show_region_info(key)
-    
-    def show_region_info(self, region_key):
-        if region_key not in regions:
-            return
-        
-        r = regions[region_key]
-        info = f"=== {r['name']} ===\n\n"
-        info += f"Capitale: {r['capital']}\n\n"
-        info += f"Description:\n{r['info']}\n\n"
-        info += f"Conseils:\n{r['tips']}\n\n"
-        info += f"Sécurité:\n{r['security']}\n\n"
-        info += f"Hébergement:\n{r['hebergement']}\n\n"
-        info += f"Tourisme:\n{r['tourisme']}"
-        
-        self.info_text.delete("1.0", "end")
-        self.info_text.insert("1.0", info)
-    
-    def calculate_dijkstra(self):
-        start_name = self.start_var.get()
-        dest_name = self.dest_var.get()
-        
-        if not dest_name:
-            messagebox.showwarning("Attention", "Sélectionnez une destination!")
-            return
-        
-        start = self.get_region_key_from_name(start_name)
-        dest = self.get_region_key_from_name(dest_name)
-        
-        path_national, dist_national = dijkstra(start, dest, road_matrix_national)
-        path_autoroute, dist_autoroute = dijkstra(start, dest, road_matrix_autoroute)
-        
-        speed_national = 80
-        speed_autoroute = 100
-        
-        nat_time = format_time(dist_national / speed_national)
-        aut_time = format_time(dist_autoroute / speed_autoroute)
-        
-        self.selected_path_national = path_national
-        self.selected_path_autoroute = path_autoroute
-        
-        real_nat = get_osrm_route(path_national)
-        real_aut = get_osrm_route(path_autoroute)
-        
-        self.national_label.config(text=f"Route Nationale: {dist_national} km | {nat_time}")
-        self.national_list.delete(0, "end")
-        for i, region in enumerate(path_national):
-            self.national_list.insert(i, f"{i+1}. {regions[region]['name']}")
-        
-        self.autoroute_label.config(text=f"Autoroute: {dist_autoroute} km | {aut_time}")
-        self.autoroute_list.delete(0, "end")
-        for i, region in enumerate(path_autoroute):
-            self.autoroute_list.insert(i, f"{i+1}. {regions[region]['name']}")
-        
-        self.draw_map(path_national, path_autoroute, real_nat, real_aut)
-        self.show_region_info(dest)
-    
-    def calculate_tsp(self):
-        start_name = self.start_var.get()
-        start = self.get_region_key_from_name(start_name)
-        
-        path_national, dist_national = two_phase_tsp(road_matrix_national, start)
-        path_autoroute, dist_autoroute = two_phase_tsp(road_matrix_autoroute, start)
-        
-        speed_national = 80
-        speed_autoroute = 100
-        
-        nat_time = format_time(dist_national / speed_national)
-        aut_time = format_time(dist_autoroute / speed_autoroute)
-        
-        self.selected_path_national = path_national
-        self.selected_path_autoroute = path_autoroute
-        
-        real_nat = get_osrm_route(path_national)
-        real_aut = get_osrm_route(path_autoroute)
-        
-        self.national_label.config(text=f"Route Nationale (TSP): {dist_national} km | {nat_time}")
-        self.national_list.delete(0, "end")
-        for i, region in enumerate(path_national):
-            self.national_list.insert(i, f"{i+1}. {regions[region]['name']}")
-        
-        self.autoroute_label.config(text=f"Autoroute (TSP): {dist_autoroute} km | {aut_time}")
-        self.autoroute_list.delete(0, "end")
-        for i, region in enumerate(path_autoroute):
-            self.autoroute_list.insert(i, f"{i+1}. {regions[region]['name']}")
-        
-        self.draw_map(path_national, path_autoroute, real_nat, real_aut)
-        
-        dest = path_national[-1]
-        self.show_region_info(dest)
-    
-    def reset(self):
-        self.dest_var.set("")
-        self.national_label.config(text="Route Nationale: -")
-        self.national_list.delete(0, "end")
-        self.autoroute_label.config(text="Autoroute: -")
-        self.autoroute_list.delete(0, "end")
-        self.selected_path_national = []
-        self.selected_path_autoroute = []
-        self.draw_map()
-        self.info_text.delete("1.0", "end")
-        self.info_text.insert("1.0", "Sélectionnez une destination et cliquez sur 'Chemin optimal' (Dijkstra) pour un itinéraire vers une destination,\nou sur 'Circuit total' (TSP) pour visiter toutes les régions.")
-
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = SenegalTripPlannerApp(root)
-    root.mainloop()
+if __name__ == '__main__':
+    app.run(debug=True)
