@@ -322,43 +322,60 @@ class SenegalTripPlannerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Senegal Trip Planner - Planificateur d'itinéraire")
-        self.root.geometry("1000x700")
+        self.root.geometry("1100x750")
         self.root.configure(bg="#1a1a2e")
         
+        self.selected_path_national = []
+        self.selected_path_autoroute = []
+        
         self.setup_ui()
+    
+    def get_region_names(self):
+        return [regions[k]['name'] for k in regions.keys()]
+    
+    def get_region_key_from_name(self, name):
+        for k, v in regions.items():
+            if v['name'] == name:
+                return k
+        return name
     
     def setup_ui(self):
         header = tk.Frame(self.root, bg="#1a1a2e")
         header.pack(pady=15)
         
-        tk.Label(header, text="SENEGAL TRIP PLANNER", font=("Arial", 18, "bold"), 
+        tk.Label(header, text="SENEGAL TRIP PLANNER", font=("Arial", 20, "bold"), 
                bg="#1a1a2e", fg="#e8e8e8").pack()
-        tk.Label(header, text="Planificateur d'itinéraire - 14 régions", 
-               font=("Arial", 10), bg="#1a1a2e", fg="#a0a0a0").pack()
+        tk.Label(header, text="Planificateur d'itinéraire - 14 régions du Sénégal", 
+               font=("Arial", 11), bg="#1a1a2e", fg="#a0a0a0").pack()
         
         controls = tk.Frame(self.root, bg="#16213e", padx=20, pady=15)
         controls.pack(fill="x", padx=20)
         
-        tk.Label(controls, text="Départ:", bg="#16213e", fg="#e8e8e8").grid(row=0, column=0, padx=5)
-        self.start_var = tk.StringVar(value="dakar")
+        region_names = self.get_region_names()
+        
+        tk.Label(controls, text="Départ:", bg="#16213e", fg="#e8e8e8", font=("Arial", 10)).grid(row=0, column=0, padx=5)
+        self.start_var = tk.StringVar(value="Dakar")
         self.start_combo = ttk.Combobox(controls, textvariable=self.start_var, 
-                                      values=list(regions.keys()), state="readonly", width=15)
+                                      values=region_names, state="readonly", width=18, font=("Arial", 10))
         self.start_combo.grid(row=0, column=1, padx=5)
         
-        tk.Label(controls, text="Destination:", bg="#16213e", fg="#e8e8e8").grid(row=0, column=2, padx=5)
+        tk.Label(controls, text="Destination:", bg="#16213e", fg="#e8e8e8", font=("Arial", 10)).grid(row=0, column=2, padx=5)
         self.dest_var = tk.StringVar()
         self.dest_combo = ttk.Combobox(controls, textvariable=self.dest_var, 
-                                     values=list(regions.keys()), state="readonly", width=15)
+                                     values=region_names, state="readonly", width=18, font=("Arial", 10))
         self.dest_combo.grid(row=0, column=3, padx=5)
         
-        tk.Button(controls, text="Chemin optimal (Dijkstra)", command=self.calculate_dijkstra,
-                bg="#4a90a4", fg="white").grid(row=0, column=4, padx=10)
+        btn_dijkstra = tk.Button(controls, text="Chemin optimal (Dijkstra)", command=self.calculate_dijkstra,
+                bg="#3b82f6", fg="white", font=("Arial", 10, "bold"), padx=10, pady=5)
+        btn_dijkstra.grid(row=0, column=4, padx=10)
         
-        tk.Button(controls, text="Circuit total (TSP)", command=self.calculate_tsp,
-                bg="#4a90a4", fg="white").grid(row=0, column=5, padx=10)
+        btn_tsp = tk.Button(controls, text="Circuit total (TSP)", command=self.calculate_tsp,
+                bg="#f97316", fg="white", font=("Arial", 10, "bold"), padx=10, pady=5)
+        btn_tsp.grid(row=0, column=5, padx=10)
         
-        tk.Button(controls, text="Réinitialiser", command=self.reset,
-                bg="#2a3a5a", fg="white").grid(row=0, column=6, padx=10)
+        btn_reset = tk.Button(controls, text="Réinitialiser", command=self.reset,
+                bg="#2a3a5a", fg="white", font=("Arial", 10), padx=10, pady=5)
+        btn_reset.grid(row=0, column=6, padx=10)
         
         main = tk.Frame(self.root, bg="#1a1a2e")
         main.pack(fill="both", expand=True, padx=20, pady=10)
@@ -369,21 +386,31 @@ class SenegalTripPlannerApp:
         tk.Label(results_frame, text="ITINÉRAIRES", font=("Arial", 12, "bold"),
               bg="#16213e", fg="#e8e8e8").pack(anchor="w")
         
-        self.national_label = tk.Label(results_frame, text="Route Nationale: -\n",
+        self.national_label = tk.Label(results_frame, text="Route Nationale: -",
                                     font=("Arial", 10, "bold"), bg="#16213e", fg="#3b82f6", 
-                                    justify="left")
-        self.national_label.pack(anchor="w", pady=(10, 5))
+                                    justify="left", anchor="w")
+        self.national_label.pack(anchor="w", pady=(10, 5), fill="x")
         
-        self.national_list = tk.Listbox(results_frame, height=8, bg="#1f2b47", fg="#e8e8e8")
+        self.national_list = tk.Listbox(results_frame, height=8, bg="#1f2b47", fg="#e8e8e8", font=("Arial", 9))
         self.national_list.pack(fill="x", pady=5)
         
-        self.autoroute_label = tk.Label(results_frame, text="Autoroute: -\n",
+        self.autoroute_label = tk.Label(results_frame, text="Autoroute: -",
                                      font=("Arial", 10, "bold"), bg="#16213e", fg="#f97316", 
-                                     justify="left")
-        self.autoroute_label.pack(anchor="w", pady=(10, 5))
+                                     justify="left", anchor="w")
+        self.autoroute_label.pack(anchor="w", pady=(10, 5), fill="x")
         
-        self.autoroute_list = tk.Listbox(results_frame, height=8, bg="#1f2b47", fg="#e8e8e8")
+        self.autoroute_list = tk.Listbox(results_frame, height=8, bg="#1f2b47", fg="#e8e8e8", font=("Arial", 9))
         self.autoroute_list.pack(fill="x", pady=5)
+        
+        canvas_frame = tk.Frame(main, bg="#16213e", padx=15, pady=15)
+        canvas_frame.pack(side="right", fill="both", expand=True)
+        
+        tk.Label(canvas_frame, text="CARTE", font=("Arial", 12, "bold"),
+              bg="#16213e", fg="#e8e8e8").pack(anchor="w")
+        
+        self.canvas = tk.Canvas(canvas_frame, width=380, height=400, bg="#1f2b47")
+        self.canvas.pack(pady=10)
+        self.draw_map()
         
         info_frame = tk.Frame(main, bg="#16213e", padx=15, pady=15)
         info_frame.pack(side="right", fill="both", expand=True)
@@ -391,21 +418,65 @@ class SenegalTripPlannerApp:
         tk.Label(info_frame, text="INFORMATIONS", font=("Arial", 12, "bold"),
               bg="#16213e", fg="#e8e8e8").pack(anchor="w")
         
-        self.info_text = tk.Text(info_frame, height=20, width=40, bg="#1f2b47", fg="#e8e8e8",
-                               font=("Arial", 9))
+        info_scroll = tk.Scrollbar(info_frame)
+        info_scroll.pack(side="right", fill="y")
+        
+        self.info_text = tk.Text(info_frame, height=20, width=38, bg="#1f2b47", fg="#e8e8e8",
+                               font=("Arial", 9), yscrollcommand=info_scroll.set)
         self.info_text.pack(fill="both", expand=True, pady=10)
-        self.info_text.insert("1.0", "Sélectionnez une destination et cliquez sur 'Chemin optimal' ou 'Circuit total' pour voir les résultats.")
+        info_scroll.config(command=self.info_text.yview)
+        self.info_text.insert("1.0", "Sélectionnez une destination et cliquez sur 'Chemin optimal' (Dijkstra) pour un itinéraire vers une destination,\nou sur 'Circuit total' (TSP) pour visiter toutes les régions.")
         
         self.start_combo.bind("<<ComboboxSelected>>", self.on_region_select)
         self.dest_combo.bind("<<ComboboxSelected>>", self.on_dest_select)
     
+    def draw_map(self, path_national=None, path_autoroute=None):
+        self.canvas.delete("all")
+        
+        min_lat = min(regions[k]['lat'] for k in regions)
+        max_lat = max(regions[k]['lat'] for k in regions)
+        min_lng = min(regions[k]['lng'] for k in regions)
+        max_lng = max(regions[k]['lng'] for k in regions)
+        
+        width = 380
+        height = 400
+        padding = 30
+        
+        def map_coords(lat, lng):
+            x = padding + (lng - min_lng) / (max_lng - min_lng) * (width - 2 * padding)
+            y = height - padding - (lat - min_lat) / (max_lat - min_lat) * (height - 2 * padding)
+            return x, y
+        
+        for key, r in regions.items():
+            x, y = map_coords(r['lat'], r['lng'])
+            self.canvas.create_oval(x-5, y-5, x+5, y+5, fill="#4a90a4", outline="#e8e8e8")
+            self.canvas.create_text(x+8, y-10, text=r['name'], fill="#e8e8e8", font=("Arial", 7))
+        
+        if path_national:
+            for i in range(len(path_national) - 1):
+                r1 = regions[path_national[i]]
+                r2 = regions[path_national[i + 1]]
+                x1, y1 = map_coords(r1['lat'], r1['lng'])
+                x2, y2 = map_coords(r2['lat'], r2['lng'])
+                self.canvas.create_line(x1, y1, x2, y2, fill="#3b82f6", width=2)
+        
+        if path_autoroute:
+            for i in range(len(path_autoroute) - 1):
+                r1 = regions[path_autoroute[i]]
+                r2 = regions[path_autoroute[i + 1]]
+                x1, y1 = map_coords(r1['lat'], r1['lng'])
+                x2, y2 = map_coords(r2['lat'], r2['lng'])
+                self.canvas.create_line(x1, y1, x2, y2, fill="#f97316", width=2)
+    
     def on_region_select(self, event):
-        self.show_region_info(self.start_var.get())
+        key = self.get_region_key_from_name(self.start_var.get())
+        self.show_region_info(key)
     
     def on_dest_select(self, event):
         dest = self.dest_var.get()
         if dest:
-            self.show_region_info(dest)
+            key = self.get_region_key_from_name(dest)
+            self.show_region_info(key)
     
     def show_region_info(self, region_key):
         if region_key not in regions:
@@ -424,12 +495,15 @@ class SenegalTripPlannerApp:
         self.info_text.insert("1.0", info)
     
     def calculate_dijkstra(self):
-        start = self.start_var.get()
-        dest = self.dest_var.get()
+        start_name = self.start_var.get()
+        dest_name = self.dest_var.get()
         
-        if not dest:
+        if not dest_name:
             messagebox.showwarning("Attention", "Sélectionnez une destination!")
             return
+        
+        start = self.get_region_key_from_name(start_name)
+        dest = self.get_region_key_from_name(dest_name)
         
         path_national, dist_national = dijkstra(start, dest, road_matrix_national)
         path_autoroute, dist_autoroute = dijkstra(start, dest, road_matrix_autoroute)
@@ -440,20 +514,25 @@ class SenegalTripPlannerApp:
         nat_time = format_time(dist_national / speed_national)
         aut_time = format_time(dist_autoroute / speed_autoroute)
         
-        self.national_label.config(text=f"Route Nationale:\nDistance: {dist_national} km | Durée: {nat_time}")
+        self.selected_path_national = path_national
+        self.selected_path_autoroute = path_autoroute
+        
+        self.national_label.config(text=f"Route Nationale: {dist_national} km | {nat_time}")
         self.national_list.delete(0, "end")
         for i, region in enumerate(path_national):
             self.national_list.insert(i, f"{i+1}. {regions[region]['name']}")
         
-        self.autoroute_label.config(text=f"Autoroute:\nDistance: {dist_autoroute} km | Durée: {aut_time}")
+        self.autoroute_label.config(text=f"Autoroute: {dist_autoroute} km | {aut_time}")
         self.autoroute_list.delete(0, "end")
         for i, region in enumerate(path_autoroute):
             self.autoroute_list.insert(i, f"{i+1}. {regions[region]['name']}")
         
+        self.draw_map(path_national, path_autoroute)
         self.show_region_info(dest)
     
     def calculate_tsp(self):
-        start = self.start_var.get()
+        start_name = self.start_var.get()
+        start = self.get_region_key_from_name(start_name)
         
         path_national, dist_national = two_phase_tsp(road_matrix_national, start)
         path_autoroute, dist_autoroute = two_phase_tsp(road_matrix_autoroute, start)
@@ -464,27 +543,35 @@ class SenegalTripPlannerApp:
         nat_time = format_time(dist_national / speed_national)
         aut_time = format_time(dist_autoroute / speed_autoroute)
         
-        self.national_label.config(text=f"Route Nationale (TSP):\nDistance: {dist_national} km | Durée: {nat_time}")
+        self.selected_path_national = path_national
+        self.selected_path_autoroute = path_autoroute
+        
+        self.national_label.config(text=f"Route Nationale (TSP): {dist_national} km | {nat_time}")
         self.national_list.delete(0, "end")
         for i, region in enumerate(path_national):
             self.national_list.insert(i, f"{i+1}. {regions[region]['name']}")
         
-        self.autoroute_label.config(text=f"Autoroute (TSP):\nDistance: {dist_autoroute} km | Durée: {aut_time}")
+        self.autoroute_label.config(text=f"Autoroute (TSP): {dist_autoroute} km | {aut_time}")
         self.autoroute_list.delete(0, "end")
         for i, region in enumerate(path_autoroute):
             self.autoroute_list.insert(i, f"{i+1}. {regions[region]['name']}")
+        
+        self.draw_map(path_national, path_autoroute)
         
         dest = path_national[-1]
         self.show_region_info(dest)
     
     def reset(self):
         self.dest_var.set("")
-        self.national_label.config(text="Route Nationale: -\n")
+        self.national_label.config(text="Route Nationale: -")
         self.national_list.delete(0, "end")
-        self.autoroute_label.config(text="Autoroute: -\n")
+        self.autoroute_label.config(text="Autoroute: -")
         self.autoroute_list.delete(0, "end")
+        self.selected_path_national = []
+        self.selected_path_autoroute = []
+        self.draw_map()
         self.info_text.delete("1.0", "end")
-        self.info_text.insert("1.0", "Sélectionnez une destination et cliquez sur 'Chemin optimal' ou 'Circuit total' pour voir les résultats.")
+        self.info_text.insert("1.0", "Sélectionnez une destination et cliquez sur 'Chemin optimal' (Dijkstra) pour un itinéraire vers une destination,\nou sur 'Circuit total' (TSP) pour visiter toutes les régions.")
 
 
 if __name__ == "__main__":
