@@ -310,7 +310,19 @@
 
             Object.keys(regions).forEach(key => {
                 const r = regions[key];
-                markers[key] = L.marker([r.lat, r.lng]).addTo(map).bindPopup(`<b>${r.name}</b><br>${r.capital}`);
+                const colors = {'dakar':'#e74c3c','thies':'#3498db','diourbel':'#9b59b6','kaolack':'#f39c12','saintlouis':'#1abc9c','louga':'#e67e22','kolda':'#2ecc71','ziguinchor':'#e91e63','sedhiou':'#00bcd4','kaffrine':'#8e44ad','kedougou':'#27ae60','matam':'#d35400','tamba':'#c0392b','fatick':'#16a085'};
+                const color = colors[key] || '#4a90a4';
+                const popupContent = `<div style="min-width:200px">
+                    <div style="width:100%;height:80px;background:${color};border-radius:4px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;">
+                        <span style="color:white;font-size:24px;font-weight:bold;">${r.name.charAt(0)}</span>
+                    </div>
+                    <h3 style="margin:0 0 8px;color:${color}">${r.name}</h3>
+                    <p style="margin:4px 0;font-size:12px"><strong>Capitale:</strong> ${r.capital}</p>
+                    <p style="margin:4px 0;font-size:11px;color:#666">${r.info}</p>
+                    <p style="margin:4px 0;font-size:11px"><strong>Conseil:</strong> ${r.tips || '-'}</p>
+                    <p style="margin:4px 0;font-size:11px"><strong>Hébergement:</strong> ${r.hebergement || '-'}</p>
+                </div>`;
+                markers[key] = L.marker([r.lat, r.lng]).addTo(map).bindPopup(popupContent);
             });
 
             populateSelects();
@@ -462,44 +474,16 @@
             await drawSingleRoute(autoroutePath, '#f97316', 'autoroute');
         }
 
-        let offlineRoutes = null;
+        async function drawSingleRoute(path, color, key) {
+            if (path.length < 2) return;
 
-            async function loadOfflineRoutes() {
-                try {
-                    const res = await fetch('/api/routes');
-                    offlineRoutes = await res.json();
-                } catch (e) { console.log('Offline routes not available'); }
-            }
-            loadOfflineRoutes();
-
-            async function drawSingleRoute(path, color, key) {
-                if (path.length < 2) return;
-
-                const latLngs = path.map(k => [regions[k].lat, regions[k].lng]);
-                
-                // Try offline routes first
-                if (offlineRoutes && offlineRoutes.capitals) {
-                    const routeType = key === 'autoroute' ? 'routes_autoroute' : 'routes_national';
-                    const routes = offlineRoutes[routeType] || {};
-                    
-                    let hasOfflineRoute = false;
-                    for (let i = 0; i < path.length - 1; i++) {
-                        const keyRoute = `${path[i]}_${path[i+1]}`;
-                        if (routes[keyRoute] && routes[keyRoute].coordinates) {
-                            routeLayers[key + i] = L.polyline(
-                                routes[keyRoute].coordinates.map(c => [c[0], c[1]]), 
-                                { color: color, weight: 4, opacity: 0.8 }
-                            ).addTo(map);
-                            hasOfflineRoute = true;
-                        }
-                    }
-                    if (hasOfflineRoute) return;
-                }
-                
-                // Fallback to OSRM
-                const coordinates = latLngs.map(p => `${p[1]},${p[0]}`).join(';');
-                const url = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson`;
-                
+            const latLngs = path.map(k => [regions[k].lat, regions[k].lng]);
+            
+            const coordinates = latLngs.map(p => `${p[1]},${p[0]}`).join(';');
+            const profile = key === 'autoroute' ? 'driving' : 'driving';
+            const url = `https://router.project-osrm.org/route/v1/${profile}/${coordinates}?overview=full&geometries=geojson`;
+            
+            try {
                 const response = await fetch(url);
                 const data = await response.json();
                 
@@ -513,13 +497,15 @@
                         lineCap: 'round'
                     }).addTo(map);
                 } else {
-                    routeLayers[key] = L.polyline(latLngs, { 
-                        color: color, 
-                        weight: key === 'autoroute' ? 6 : 4, 
-                        opacity: key === 'autoroute' ? 1 : 0.7,
-                        dashArray: key === 'national' ? '10, 5' : null
-                    }).addTo(map);
+                    throw new Error('No route');
                 }
+            } catch (e) {
+                routeLayers[key] = L.polyline(latLngs, { 
+                    color: color, 
+                    weight: key === 'autoroute' ? 6 : 4, 
+                    opacity: key === 'autoroute' ? 1 : 0.7,
+                    dashArray: key === 'national' ? '10, 5' : null
+                }).addTo(map);
             }
 
             if (routeLayers[key]) {

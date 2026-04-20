@@ -1,17 +1,7 @@
 from flask import Flask, render_template, jsonify, request
 import math
-import json
-import os
 
 app = Flask(__name__)
-
-# Load offline routes data
-routes_file = os.path.join(os.path.dirname(__file__), 'routes_data.json')
-if os.path.exists(routes_file):
-    with open(routes_file, 'r', encoding='utf-8') as f:
-        routes_data = json.load(f)
-else:
-    routes_data = {"routes_national": {}, "routes_autoroute": {}, "capitals": {}}
 
 regions = {
     "dakar": {
@@ -130,7 +120,6 @@ regions = {
 
 all_regions = list(regions.keys())
 
-# Routes nationales - Routes classiques / departementales
 distances_national = {
     "dakar": {"thies": 46, "fatick": 148, "kaolack": 188},
     "thies": {"dakar": 46, "diourbel": 77, "kaolack": 116, "fatick": 75, "kaffrine": 90, "louga": 155, "saintlouis": 146},
@@ -148,7 +137,6 @@ distances_national = {
     "fatick": {"kaolack": 65, "kaffrine": 78, "sedhiou": 115, "thies": 75}
 }
 
-# Autoroutes - Routes rapides etayed
 distances_autoroute = {
     "dakar": {"thies": 42, "fatick": 140, "kaolack": 175},
     "thies": {"dakar": 42, "diourbel": 72, "kaolack": 110, "fatick": 68, "kaffrine": 85, "louga": 148, "saintlouis": 140},
@@ -164,16 +152,6 @@ distances_autoroute = {
     "matam": {"saintlouis": 170, "louga": 105, "tamba": 150},
     "tamba": {"kaffrine": 95, "matam": 150, "kolda": 135, "kedougou": 172, "kaolack": 268},
     "fatick": {"kaolack": 58, "kaffrine": 70, "sedhiou": 105, "thies": 68}
-}
-
-# Routes par defaut - Pour les connexions manquantes
-# (utilisees quand direct link n'existe pas dans la matrice principale)
-default_routes = {
-    "dakar": {"thies": 50},
-    "thies": {"dakar": 50, "diourbel": 80, "kaolack": 120},
-    "diourbel": {"thies": 80, "kaolack": 90, "kaffrine": 70},
-    "kaolack": {"thies": 120, "diourbel": 90, "fatick": 70, "kaffrine": 60},
-    "fatick": {"kaolack": 70, "kaffrine": 80}
 }
 
 
@@ -378,12 +356,6 @@ def index():
 @app.route('/api/regions')
 def get_regions():
     return jsonify(regions)
-
-
-@app.route('/api/routes')
-def get_routes():
-    """API for offline routes data."""
-    return jsonify(routes_data)
 
 
 @app.route('/api/dijkstra')
