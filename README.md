@@ -490,12 +490,861 @@ Ce projet démontre la maîtrise des algorithmes de graphes et le développement
 
 ---
 
+## 8. Structure du Projet et Explication du Code
+
+### 8.1 Organisation des Fichiers
+
+```
+Senegal_Trip_Planner/
+├── app.py                 # Application principale (Flask)
+├── README.md              # Documentation du projet
+├── requirements.txt       # Dépendances Python
+└── templates/
+    └── index.html        # Interface utilisateur
+```
+
+### 8.2 Architecture du Code Python (app.py)
+
+Le fichier `app.py` est le cœur de l'application. Il contient toutes les fonctionnalités server-side.
+
+#### 8.2.1 Structure Globale
+
+```python
+# ===========================================
+# 1. IMPORTS ET CONFIGURATION
+# ===========================================
+
+from flask import Flask, render_template, jsonify, request
+import math
+
+app = Flask(__name__)
+
+# ===========================================
+# 2. DONNÉES DES RÉGIONS
+# ===========================================
+
+regions = {
+    "dakar": { ... },
+    "thies": { ... },
+    # ... 14 régions
+}
+
+# Liste des clés pour itération
+all_regions = list(regions.keys())
+
+# ===========================================
+# 3. MATRICES DE DISTANCES
+# ===========================================
+
+distances_national = { ... }   # Routes classiques
+distances_autoroute = { ... }  # Routes rapides
+
+# ===========================================
+# 4. FONCTIONS UTILITAIRES
+# ===========================================
+
+def haversine(lat1, lon1, lat2, lon2):
+    """Calcule distance entre deux points géographiques"""
+
+def get_distance(r1, r2, dist_matrix):
+    """Récupère distance entre deux régions"""
+
+def build_matrix(distances):
+    """Convertit distances en matrice d'adjacence"""
+
+# ===========================================
+# 5. ALGORITHMES DE GRAPHES
+# ===========================================
+
+def dijkstra(start, end, matrix):
+    """Plus court chemin (Dijkstra)"""
+
+def bellman_ford(start, end, matrix):
+    """Plus court chemin (Bellman-Ford)"""
+
+def tsp_nearest_neighbor(matrix, start):
+    """Construction TSP (Nearest Neighbor)"""
+
+def two_opt_optimize(path, matrix):
+    """Optimisation locale TSP (2-opt)"""
+
+def two_phase_tsp(matrix, start):
+    """TSP en deux phases"""
+
+# ===========================================
+# 6. FONCTIONS API
+# ===========================================
+
+@app.route('/')
+def index():
+    """Page d'accueil"""
+
+@app.route('/api/regions')
+def get_regions():
+    """API: liste des régions"""
+
+@app.route('/api/dijkstra')
+def api_dijkstra():
+    """API: calcul Dijkstra"""
+
+@app.route('/api/bellman')
+def api_bellman():
+    """API: calcul Bellman-Ford"""
+
+@app.route('/api/tsp')
+def api_tsp():
+    """API: calcul TSP"""
+
+# ===========================================
+# 7. POINT D'ENTRÉE
+# ===========================================
+
+if __name__ == '__main__':
+    app.run(debug=True)
+```
+
+---
+
+### 8.3 Détail des Fonctions
+
+#### 8.3.1 Fonctions de Calculs Géographiques
+
+**`haversine(lat1, lon1, lat2, lon2)`**
+
+Calcule la distance orthodromique (vol d'oiseau) entre deux points géographiques sur la sphère terrestre.
+
+```python
+def haversine(lat1, lon1, lat2, lon2):
+    """
+    Calcule la distance en km entre deux points GPS
+    utilisant la formule haversine.
+    
+    Paramètres:
+        lat1, lon1: Coordonnées point de départ
+        lat2, lon2: Coordonnées point d'arrivée
+    
+    Retourne:
+        Distance en kilomètres
+    """
+    R = 6371  # Rayon moyen de la Terre (km)
+    
+    # Conversion en radians
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+    
+    # Formule haversine
+    a = math.sin(dphi/2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda/2)**2
+    c = 2 * math.asin(math.sqrt(a))
+    
+    return R * c
+```
+
+**Explication mathématique :**
+- La formule haversine donne la distance minimale sur une sphère
+- Elle utilise le grand cercle reliant les deux points
+- `R = 6371 km` est le rayon moyen terrestre
+
+---
+
+**`get_distance(r1, r2, dist_matrix)`**
+
+Récupère la distance entre deux régions, avec fallback haversine.
+
+```python
+def get_distance(r1, r2, dist_matrix):
+    """
+    Récupère la distance entre deux régions.
+    
+    Ordre de recherche:
+    1. Vérifier si connexion directe existe
+    2. Utiliser haversine comme fallback
+    3. Retourner 999 si aucune connexion
+    """
+    # Même région = distance zéro
+    if r1 == r2:
+        return 0
+    
+    # Chercher dans la matrice
+    if r1 in dist_matrix and r2 in dist_matrix[r1]:
+        return dist_matrix[r1][r2]
+    if r2 in dist_matrix and r1 in dist_matrix[r2]:
+        return dist_matrix[r2][r1]
+    
+    # Fallback: calcul haversine
+    d = haversine(
+        regions[r1]['lat'], regions[r1]['lng'],
+        regions[r2]['lat'], regions[r2]['lng']
+    )
+    return d if d > 0 else 999
+```
+
+---
+
+**`build_matrix(distances)`**
+
+Construit une matrice d'adjacence complète.
+
+```python
+def build_matrix(distances):
+    """
+    Construit une matrice 14x14 des distances.
+    
+    Chaque cellule [r1][r2] contient la distance
+    entre les régions r1 et r2.
+    
+    Valeurs spéciales:
+    - 0: même région
+    - 999: pas de connexion
+    """
+    matrix = {}
+    for r1 in all_regions:
+        matrix[r1] = {}
+        for r2 in all_regions:
+            d = get_distance(r1, r2, distances)
+            matrix[r1][r2] = d if d > 0 else 999
+    return matrix
+```
+
+---
+
+#### 8.3.2 Algorithmes de Plus Court Chemin
+
+**`dijkstra(start, end, matrix)`**
+
+Implémente l'algorithme de Dijkstra pour trouver le plus court chemin.
+
+```python
+def dijkstra(start, end, matrix):
+    """
+    Algorithme de Dijkstra - Plus court chemin
+    
+    Principe (approche gloutonne):
+    1. Initialiser distances à ∞, sauf départ = 0
+    2. Tant que des nœuds non visités:
+       -Sélectionner le nœud avec distance minimale
+       -Mettre à jour les distances des voisins
+       -Enregistrer le prédecesseur
+    3. Reconstruire le chemin à rebours
+    
+    Complexité: O(V²) = O(14²) = trivial
+    
+    Paramètres:
+        start: Région de départ
+        end: Région d'arrivée
+        matrix: Matrice des distances
+    
+    Retourne:
+        (path, distance) - Chemin et distance totale
+    """
+    # Initialisation
+    dist = {r: 9999 for r in all_regions}
+    prev = {r: None for r in all_regions}
+    dist[start] = 0
+    unvisited = set(all_regions)
+    
+    # Boucle principale
+    while unvisited:
+        # Sélectionner le nœud non visité avec distance minimale
+        current = min(unvisited, key=lambda x: dist[x])
+        
+        # Arrêt anticipé si destination atteinte
+        if current == end or dist[current] >= 9999:
+            break
+            
+        unvisited.remove(current)
+        
+        # Mise à jour des voisins
+        for neighbor in all_regions:
+            if neighbor in unvisited and 0 < matrix[current][neighbor] < 9999:
+                new_dist = dist[current] + matrix[current][neighbor]
+                if new_dist < dist[neighbor]:
+                    dist[neighbor] = new_dist
+                    prev[neighbor] = current
+    
+    # Reconstruire le chemin (à l'envers)
+    path = []
+    current = end
+    while current and prev[current]:
+        path.insert(0, current)  # Insérer au début
+        current = prev[current]
+    
+    # Ajouter le point de départ
+    if path and path[0] != start:
+        path.insert(0, start)
+    
+    # Validation
+    if not path or path[0] != start:
+        return [start], 0
+    
+    return path, round(dist[end]) if dist[end] < 9999 else 0
+```
+
+**Points clés de Dijkstra :**
+- **Glouton** : Choisi toujours le nœud le plus proche
+- **Optimal** : Garantit le chemin le plus court
+- **局限性** : Ne support pas les poids négatifs
+
+---
+
+**`bellman_ford(start, end, matrix)`**
+
+Alternative à Dijkstra, peut gérer les poids négatifs.
+
+```python
+def bellman_ford(start, end, matrix):
+    """
+    Algorithme de Bellman-Ford - Plus court chemin
+    
+    Différences avec Dijkstra:
+    - Supporte les poids négatifs
+    - Plus lent: O(V*E)
+    - Peut détecter les cycles négatifs
+    
+    Pour notre cas (distances positives):
+    - Donne les mêmes résultats que Dijkstra
+    - Plus lisible pour compréhension
+    """
+    # Initialisation
+    dist = {r: float('inf') for r in all_regions}
+    prev = {r: None for r in all_regions}
+    dist[start] = 0
+    
+    # Relaxation (V-1) fois
+    for _ in range(len(all_regions) - 1):
+        for u in all_regions:
+            for v in all_regions:
+                if matrix[u][v] < 9999:
+                    if dist[u] + matrix[u][v] < dist[v]:
+                        dist[v] = dist[u] + matrix[u][v]
+                        prev[v] = u
+    
+    # Reconstruire le chemin
+    path = []
+    current = end
+    while current and prev[current]:
+        path.insert(0, current)
+        current = prev[current]
+    
+    if path and path[0] != start:
+        path.insert(0, start)
+    
+    if not path or path[0] != start:
+        return [start], 0
+    
+    return path, round(dist[end]) if dist[end] < float('inf') else 0
+```
+
+---
+
+#### 8.3.3 Algorithmes TSP (Problème du Voyageur de Commerce)
+
+**`tsp_nearest_neighbor(matrix, start)`**
+
+Phase 1: Construction rapide d'un circuit.
+
+```python
+def tsp_nearest_neighbor(matrix, start):
+    """
+    Nearest Neighbor - Construction TSP
+    
+    Principe:
+    1. Commencer au point de départ
+    2. À chaque étape, aller à la région non visitée la plus proche
+    3. Répéter jusqu'à tout visiter
+    4. Retour au point de départ
+    
+    Complexité: O(n²)
+    
+    Avantage: Rapide
+    Inconvénient: Pas toujours optimal
+    """
+    visited = {start}
+    path = [start]
+    current = start
+    unvisited = set(all_regions) - {start}
+    
+    while unvisited:
+        # Trouver les candidats valides
+        candidates = [
+            (x, matrix[current][x]) 
+            for x in unvisited 
+            if 0 < matrix[current][x] < 9999
+        ]
+        
+        # Fallback si pas de connexion directe
+        if not candidates:
+            candidates = [
+                (x, matrix[x][current]) 
+                for x in unvisited 
+                if 0 < matrix[x][current] < 9999
+            ]
+        
+        if not candidates:
+            break
+            
+        # Choisir le plus proche
+        nearest = min(candidates, key=lambda x: x[1])[0]
+        
+        path.append(nearest)
+        visited.add(nearest)
+        unvisited.remove(nearest)
+        current = nearest
+    
+    # Retour au point de départ
+    if 0 < matrix[current][start] < 9999:
+        path.append(start)
+    
+    return path
+```
+
+**Exemple d'exécution :**
+```
+Start: Dakar
+1. Dakar → Thiès (46 km plus proche)
+2. Thiès → Fatick (75 km plus proche)
+3. Fatick → Kaolack (65 km plus proche)
+...
+14. Retour à Dakar
+```
+
+---
+
+**`two_opt_optimize(path, matrix)`**
+
+Phase 2: Amélioration locale itérative.
+
+```python
+def two_opt_optimize(path, matrix, max_iterations=300):
+    """
+    2-opt - Optimisation locale
+    
+    Principe:
+    1. Prendre deux arêtes du circuit
+    2. Les inverser (swap)
+    3. Si amélioration → garder
+    4. Répéter jusqu'à stabilisation
+    
+    Échange effectué:
+    A---B   devient   A---C
+    |    |            |    |
+    D---C              D---B
+    
+    Complexité: O(n² × itérations)
+    """
+    if len(path) < 4:
+        return path
+    
+    improved = True
+    iteration = 0
+    best_path = path[:-1].copy()  # Sans le retour final
+    
+    while improved and iteration < max_iterations:
+        improved = False
+        iteration += 1
+        best_distance = calculate_path_distance(best_path, matrix)
+        
+        # Tester tous les échanges possibles
+        for i in range(1, len(best_path) - 1):
+            for j in range(i + 1, len(best_path)):
+                # Créer nouveau chemin avec inversion
+                new_path = (
+                    best_path[:i] + 
+                    best_path[i:j+1][::-1] + 
+                    best_path[j+1:]
+                )
+                new_distance = calculate_path_distance(new_path, matrix)
+                
+                if new_distance < best_distance:
+                    best_path = new_path
+                    best_distance = new_distance
+                    improved = True
+                    break  # Sortir pour recommencer
+            if improved:
+                break
+    
+    best_path.append(best_path[0])  # Retour au départ
+    return best_path
+```
+
+**Visualisation 2-opt :**
+```
+Avant:     Dakar → Thiès → Kaolack → Ziguinchor → Kolda → Dakar
+                   ↓ (échanger Kaolack et Kolda)
+Après:    Dakar → Thiès → Kolda → Ziguinchor → Kaolack → Dakar
+```
+
+---
+
+**`two_phase_tsp(matrix, start)`**
+
+Combine les deux phases.
+
+```python
+def two_phase_tsp(matrix, start):
+    """
+    TSP en deux phases
+    
+    Phase 1: Nearest Neighbor (solution initiale rapide)
+    Phase 2: 2-opt (optimisation)
+    
+    Résultat:
+    - Solution initiale sous-optimale
+    - Améliorée localement jusqu'au maximum local
+    """
+    # Phase 1: Constructeur
+    initial_path = tsp_nearest_neighbor(matrix, start)
+    
+    # Phase 2: Optimisation
+    optimized_path = two_opt_optimize(initial_path, matrix)
+    total_distance = calculate_path_distance(optimized_path, matrix)
+    
+    return optimized_path, round(total_distance)
+```
+
+---
+
+#### 8.3.4 Routes API Flask
+
+**Architecture REST:**
+
+```python
+@app.route('/')
+def index():
+    """Affiche la page HTML principale"""
+    return render_template('index.html', regions=regions)
+
+@app.route('/api/regions')
+def get_regions():
+    """Retourne toutes les régions en JSON"""
+    return jsonify(regions)
+
+@app.route('/api/dijkstra')
+def api_dijkstra():
+    """
+    API Dijkstra - Paramètres GET:
+    - start: Région de départ (défaut: dakar)
+    - destination: Région d'arrivée (obligatoire)
+    
+    Retourne: { national: {...}, autoroute: {...} }
+    """
+    destination = request.args.get('destination')
+    start = request.args.get('start', 'dakar')
+    
+    # Validation
+    if not destination or start not in all_regions or destination not in all_regions:
+        return jsonify({"error": "Paramètres invalides"}), 400
+    
+    # Calculs
+    path_national, dist_national = dijkstra(start, destination, road_matrix_national)
+    path_autoroute, dist_autoroute = dijkstra(start, destination, road_matrix_autoroute)
+    
+    # Formatage réponse
+    return jsonify({
+        "national": {
+            "path": path_national,
+            "distance": dist_national,
+            "time": format_time(dist_national / 80)  # 80 km/h
+        },
+        "autoroute": {
+            "path": path_autoroute,
+            "distance": dist_autoroute,
+            "time": format_time(dist_autoroute / 100)  # 100 km/h
+        }
+    })
+```
+
+---
+
+### 8.4 Structure du Frontend (index.html)
+
+#### 8.4.1 Organisation HTML
+
+```html
+<!-- ========================================= -->
+<!-- EN-TÊTE -->
+<!-- ========================================= -->
+<head>
+    <meta charset="UTF-8">
+    <title>Senegal Trip Planner</title>
+    
+    <!-- Feuilles de style -->
+    <link rel="stylesheet" href="leaflet.css">
+    <link href="fonts.googleapis.com...">
+    
+    <!-- CSS personnalisé -->
+    <style>
+        /* Variables CSS */
+        :root { --bg-dark: #1a1a2e; ... }
+        
+        /* Styles génériques */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* Layout */
+        .container { max-width: 1400px; margin: 0 auto; }
+        .main-content { display: grid; grid-template-columns: 1fr 350px; }
+    </style>
+</head>
+
+<!-- ========================================= -->
+<!-- CORPS -->
+<!-- ========================================= -->
+<body>
+    <div class="container">
+        <!-- En-tête -->
+        <header>
+            <h1>Senegal Trip Planner</h1>
+            <p>Planificateur d'itinéraire - 14 régions</p>
+        </header>
+        
+        <!-- Contrôles -->
+        <div class="controls">
+            <select id="startSelect"></select>
+            <select id="destinationSelect"></select>
+            <button onclick="calculateDijkstra()">Dijkstra</button>
+            <button onclick="calculateBellman()">Bellman-Ford</button>
+            <button onclick="calculateTSP()">TSP</button>
+        </div>
+        
+        <!-- Carte -->
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+        
+        <!-- Résultats -->
+        <div class="results">
+            <div class="route-section national">...</div>
+            <div class="route-section autoroute">...</div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="leaflet.js"></script>
+    <script>
+        // =========================================
+        // 1. INITIALISATION
+        // =========================================
+        let map, markers = {}, routeLayers = {}, regions = {};
+        
+        async function initMap() {
+            map = L.map('map').setView([14.4974, -14.4524], 7);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/...').addTo(map);
+            
+            // Charger les régions
+            const res = await fetch('/api/regions');
+            regions = await res.json();
+            
+            // Créer les marqueurs
+            Object.keys(regions).forEach(key => {
+                const r = regions[key];
+                const popupContent = `<div>...${r.name}...</div>`;
+                markers[key] = L.marker([r.lat, r.lng])
+                    .addTo(map)
+                    .bindPopup(popupContent);
+            });
+        }
+        
+        // =========================================
+        // 2. CALCULS API
+        // =========================================
+        async function calculateDijkstra() {
+            const start = document.getElementById('startSelect').value;
+            const dest = document.getElementById('destinationSelect').value;
+            
+            const res = await fetch(`/api/dijkstra?start=${start}&destination=${dest}`);
+            const data = await res.json();
+            
+            displayResults(data);
+        }
+        
+        // =========================================
+        // 3. AFFICHAGE CARTE
+        // =========================================
+        async function drawSingleRoute(path, color, key) {
+            // Tracé de la route sur la carte
+            const coordinates = path.map(k => [regions[k].lat, regions[k].lng]);
+            routeLayers[key] = L.polyline(coordinates, {
+                color: color,
+                weight: 4,
+                opacity: 0.8
+            }).addTo(map);
+        }
+    </script>
+</body>
+```
+
+#### 8.4.2 Flux de Données Frontend
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  INTERFACE UTILISATEUR                      │
+│                                                          │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
+│  │ startSelect │    │ destSelect │    │ Buttons   │ │
+│  └─────┬──────┘    └─────┬──────┘    └─────┬──────┘ │
+│        │                  │                  │          │
+│        ▼                  ▼                  ▼          │
+│  ┌─────────────────────────────────────┐                │
+│  │      calculateDijkstra()              │                │
+│  │   (JavaScript)                    │                │
+│  └──────────────┬──────────────────┘                │
+└────────────────┼─────────────��─��──────────────────────────┘
+                   │ fetch()
+                   ▼
+┌────────────────────────────────────────────┐
+│         SERVEUR FLASK                    │
+│                                     │
+│  /api/dijkstra?start=X&dest=Y        │
+│           │                         │
+│           ▼                       │
+│  ┌─────────────────────────┐       │
+│  │    dijkstra()          │       │
+│  │    (Python)           │       │
+│  └──────────┬────────────┘       │
+│             │                   │
+│             ▼                   │
+│  ┌─────────────────────┐         │
+│  │ Résultats JSON     │         │
+│  │ {path, dist, time}│         │
+│  └──────────┬────────┘         │
+└─────────────┼────────────────────┘
+             │ response JSON
+             ▼
+┌─────────────────────────────────────────┐
+│         AFFICHAGE RÉSULTATS              │
+│                                         │
+│  • displayResults(data)                   │
+│  • drawSingleRoute(path, color)           │
+│  • map.fitBounds()                      │
+│  • Popups informations                 │
+└────────────────────────────────────────┘
+```
+
+---
+
+### 8.5 Flux Complet d'une Requête
+
+#### Exemple: Itinéraire Dakar → Ziguinchor
+
+```
+1. UTILISATEUR
+   └── Sélectionne: Dakar (depart), Ziguinchor (destination)
+   └── Clique sur: "Dijkstra"
+
+2. FIREFOX/CHROME
+   └── fetch('/api/dijkstra?start=dakar&destination=ziguinchor')
+   └── Requête HTTP GET
+
+3. SERVEUR FLASK (app.py)
+   ├── Route '/api/dijkstra' appelée
+   ├── request.args.get('start') → 'dakar'
+   ├── request.args.get('destination') → 'ziguinchor'
+   ├── Validation: 'dakar' et 'ziguinchor' dans all_regions ✓
+   │
+   ├── dijkstra('dakar', 'ziguinchor', road_matrix_national)
+   │   ├── dist initiales: {dakar: 0, others: 9999}
+   │   ├── Itération 1: Dakar → thies (46 km)
+   │   ├── Itération 2: thies → kaolack (116+46=162)
+   │   ├── Itération 3: kaolack → ziguinchor (205+162=367)
+   │   └── Chemin: ['dakar', 'thies', 'kaolack', 'ziguinchor']
+   │
+   ├── dijkstra('dakar', 'ziguinchor', road_matrix_autoroute)
+   │   └── Chemin: ['dakar', 'thies', 'kaolack', 'ziguinchor']
+   │
+   ├── format_time(367/80) → "4h 35min"
+   │
+   └── Réponse JSON:
+       {
+         "national": {
+           "path": ["dakar", "thies", "kaolack", "ziguinchor"],
+           "distance": 367,
+           "time": "4h 35min"
+         },
+         "autoroute": {
+           "path": ["dakar", "thies", "kaolack", "ziguinchor"],
+           "distance": 348,
+           "time": "3h 29min"
+         }
+       }
+
+4. FRONTEND
+   ├── Réception JSON
+   ├── displayResults(data)
+   │   ├── Mise à jour des distances et durées
+   │   ├── Affichage des listes de régions
+   │   └── Affichage popup région destination
+   ├── drawRoutes(nationalPath, autoroutePath)
+   │   ├── Tracé ligne bleue (national)
+   │   └── Tracé ligne orange (autoroute)
+   └── map.fitBounds()
+       └── Zoom automatique sur l'itinéraire
+```
+
+---
+
+### 8.6 Points Clés du Code
+
+| Fonction | Rôle | Complexité |
+|----------|------|------------|
+| `haversine` | DistanceGPS | O(1) |
+| `get_distance` | Distance régions | O(1) |
+| `build_matrix` | Matrice adjacence | O(V²) |
+| `dijkstra` | Plus court chemin | O(V²) |
+| `bellman_ford` | Plus court chemin | O(V×E) |
+| `tsp_nearest_neighbor` | Circuit initial | O(n²) |
+| `two_opt_optimize` | Optimisation | O(n²×iter) |
+| `two_phase_tsp` | Circuit complet | O(n²) |
+
+---
+
+### 8.7 Débogage et Tests
+
+#### Tests manuels
+
+```bash
+# Tester une région
+curl http://localhost:5000/api/regions | python3 -m json.tool
+
+# Tester Dijkstra
+curl "http://localhost:5000/api/dijkstra?start=dakar&destination=ziguinchor"
+
+# Tester l'application entière
+python3 app.py
+# Puis ouvrir http://127.0.0.1:5000
+```
+
+#### Points de vérification
+
+1. **Démarrage** : `python3 app.py` sans erreur
+2. **API Regions** : Retourne 14 régions
+3. **API Dijkstra** : Retourne chemin + temps
+4. **Carte** : Affichage 14 marqueurs
+5. **Itinéraire** : Tracé sur la carte
+
+---
+
+## 9. Glossaire Technique
+
+| Terme | Signification |
+|-------|--------------|
+| **API** | Application Programming Interface |
+| **Flask** | Framework web Python |
+| **Leaflet** | Bibliothèque cartographique JS |
+| **Matrice d'adjacence** | Représentation graphe |
+| **Complexité O()** | Mesure performance |
+| **Fallback** | Solution alternative |
+| **Relaxation** | Mise à jour distance |
+| **Cycle** | Chemin qui retourne au départ |
+
+---
+
 ## Informations du Projet
 
 - **Version :** 1.0
 - **Date de création :** Avril 2026
 - **Auteur :** Mamadou Thiam
 - **Technologie :** Python Flask + HTML/JS Leaflet
+- **Inspiré par :** Problèmes académiques d'algorithmie
 
 ---
 
