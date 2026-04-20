@@ -4,20 +4,118 @@ import math
 app = Flask(__name__)
 
 regions = {
-    "dakar": {"name": "Dakar", "capital": "Dakar", "lat": 14.7167, "lng": -17.4671, "info": "Capitale du Sénégal.", "tips": "Préférez les taxis officiels."},
-    "thies": {"name": "Thiès", "capital": "Thiès", "lat": 14.7941, "lng": -16.9639, "info": "Deuxième ville, pôle industriel.", "tips": "Villages artisanaux."},
-    "diourbel": {"name": "Diourbel", "capital": "Diourbel", "lat": 14.7167, "lng": -16.2333, "info": "Capitale du Mboss, région religieuse.", "tips": "Respectez les lieux saints."},
-    "kaolack": {"name": "Kaolack", "capital": "Kaolack", "lat": 14.1500, "lng": -16.0833, "info": "Centre économique du bassin arachidier.", "tips": "Marchandez dans les marchés."},
-    "saintlouis": {"name": "Saint-Louis", "capital": "Saint-Louis", "lat": 16.0333, "lng": -16.5000, "info": "Ancienne capitale coloniale, patrimoine UNESCO.", "tips": "Architecture coloniale."},
-    "louga": {"name": "Louga", "capital": "Louga", "lat": 15.6333, "lng": -15.6333, "info": "Région sahélienne, élevage et commerce.", "tips": "Culture peule traditionnelle."},
-    "kolda": {"name": "Kolda", "capital": "Kolda", "lat": 12.8833, "lng": -14.9500, "info": "Région verdoyante au sud.", "tips": "Préférez la saison sèche."},
-    "ziguinchor": {"name": "Ziguinchor", "capital": "Ziguinchor", "lat": 12.5833, "lng": -16.2667, "info": "Capitale du sud, vibes caribéennes.", "tips": "Bateau pour les îles."},
-    "sedhiou": {"name": "Sédhiou", "capital": "Sédhiou", "lat": 12.7167, "lng": -15.1833, "info": "Transition Sine et Saloum.", "tips": "Villages historiques."},
-    "kaffrine": {"name": "Kaffrine", "capital": "Kaffrine", "lat": 14.1000, "lng": -15.4167, "info": "Région agricole du bassin arachidier.", "tips": "Cœur du pays Serer."},
-    "kedougou": {"name": "Kédougou", "capital": "Kédougou", "lat": 12.5667, "lng": -12.1833, "info": "Plus orientale, réserve Niokolo-Koba.", "tips": "Parc National pour safari."},
-    "matam": {"name": "Matam", "capital": "Matam", "lat": 15.6667, "lng": -13.2667, "info": "Sahélienne sur le fleuve Niger.", "tips": "Traversée en pirogue."},
-    "tamba": {"name": "Tambacounda", "capital": "Tambacounda", "lat": 13.7667, "lng": -13.6667, "info": "Plus grande région, porte du Sahel.", "tips": "Prévoyez un 4x4."},
-    "fatick": {"name": "Fatick", "capital": "Fatick", "lat": 14.3333, "lng": -16.0833, "info": "Sine-Saloum, lagunes et mangroves.", "tips": "Île de Joal-Fadiouth."}
+    "dakar": {
+        "name": "Dakar", "capital": "Dakar", "lat": 14.7167, "lng": -17.4671,
+        "info": "Capitale du Sénégal, plus grande ville et centre économique.",
+        "tips": "Préférez les taxis officiels. Évitez les nuits tardives.",
+        "security": "Zone sécurisée, mais vigilance recommandée la nuit.",
+        "hebergement": "Hôtels: Radisson, Terrou Bi. Budget: 15000-150000 CFA/nuit.",
+        "tourisme": "Île de Gorée, Musée Théodore Monod, Plateau."
+    },
+    "thies": {
+        "name": "Thiès", "capital": "Thiès", "lat": 14.7941, "lng": -16.9639,
+        "info": "Deuxième ville, pôle industriel et artisanale.",
+        "tips": "Visitez les villages artisanaux de Rufisque.",
+        "security": "Zone calme, respectez les us etcoutumes locaux.",
+        "hebergement": "Hôtel La Résidence. Budget: 8000-50000 CFA/nuit.",
+        "tourisme": " artisanat du tissu, villages traditionnels."
+    },
+    "diourbel": {
+        "name": "Diourbel", "capital": "Diourbel", "lat": 14.7167, "lng": -16.2333,
+        "info": "Capitale du Mboss, importante région religieuse.",
+        "tips": "Respectez les lieux saints et horaires de prière.",
+        "security": "Zone très pieuse, habillez-vous convenablement.",
+        "hebergement": "Auberge du Roi. Budget: 5000-25000 CFA/nuit.",
+        "tourisme": "Tombe de Bayam Nguidjam, marché central."
+    },
+    "kaolack": {
+        "name": "Kaolack", "capital": "Kaolack", "lat": 14.1500, "lng": -16.0833,
+        "info": "Centre économique du bassin arachidier.",
+        "tips": "Marchandez dans les marchés, négociez les prix.",
+        "security": "Zone commerciale animée, surveillez vos affaires.",
+        "hebergement": "Hôtel Le Kaolack. Budget: 6000-30000 CFA/nuit.",
+        "tourisme": "Marché hebdomadaire, agriculture arachidière."
+    },
+    "saintlouis": {
+        "name": "Saint-Louis", "capital": "Saint-Louis", "lat": 16.0333, "lng": -16.5000,
+        "info": "Ancienne capitale coloniale, patrimoine UNESCO.",
+        "tips": "Explorez l'architecture coloniale française.",
+        "security": "Zone historique sécurisée, mais prudence près du fleuve.",
+        "hebergement": "Hôtel Mermoz, Maison Bleue. Budget: 10000-80000 CFA/nuit.",
+        "tourisme": "Île Saint-Louis, Rue Gradolphe, Palais Ghadene."
+    },
+    "louga": {
+        "name": "Louga", "capital": "Louga", "lat": 15.6333, "lng": -15.6333,
+        "info": "Région sahélienne, élevage et commerce.",
+        "tips": "Découvrez la culture peule traditionnelle.",
+        "security": "Zone reculée, évitez les zones frontalières.",
+        "hebergement": "Hôtel de Louga. Budget: 4000-15000 CFA/nuit.",
+        "tourisme": "Marché pastoral, villages peuls."
+    },
+    "kolda": {
+        "name": "Kolda", "capital": "Kolda", "lat": 12.8833, "lng": -14.9500,
+        "info": "Région verdoyante au sud du pays.",
+        "tips": "Préférez la saison sèche (Nov-Mai) pour visiter.",
+        "security": "Zone rurale, restreignez vos déplacements la nuit.",
+        "hebergement": "Auberge de Kolda. Budget: 5000-20000 CFA/nuit.",
+        "tourisme": "Nature, fleuve Casamance."
+    },
+    "ziguinchor": {
+        "name": "Ziguinchor", "capital": "Ziguinchor", "lat": 12.5833, "lng": -16.2667,
+        "info": "Capitale du sud, vibes caribéennes.",
+        "tips": "Prenez le bateau pour les îles de lSaloum.",
+        "security": "Zone touristique sécurisée, mais évitez les zones frontalières.",
+        "hebergement": "Hôtel Kadiandouane, Auberge du Sud. Budget: 10000-60000 CFA/nuit.",
+        "tourisme": "Plages, Île de Carabane, mangrove."
+    },
+    "sedhiou": {
+        "name": "Sédhiou", "capital": "Sédhiou", "lat": 12.7167, "lng": -15.1833,
+        "info": "Zone de transition entre Sine et Saloum.",
+        "tips": "Visitez les villages historiques de la région.",
+        "security": "Zone calme, respectez les coutumes locales.",
+        "hebergement": "Hôtel de Sédhiou. Budget: 4000-15000 CFA/nuit.",
+        "tourisme": "Villages traditionnels, histoire locale."
+    },
+    "kaffrine": {
+        "name": "Kaffrine", "capital": "Kaffrine", "lat": 14.1000, "lng": -15.4167,
+        "info": "Région agricole du bassin arachidier, cœur du pays Serer.",
+        "tips": "Découvrez la culture Serer traditionnelle.",
+        "security": "Zone rurale paisible.",
+        "hebergement": "Auberge de Kaffrine. Budget: 3000-10000 CFA/nuit.",
+        "tourisme": "Sites sacrés Serer, agriculture."
+    },
+    "kedougou": {
+        "name": "Kédougou", "capital": "Kédougou", "lat": 12.5667, "lng": -12.1833,
+        "info": "Plus orientale, réserve nationale Niokolo-Koba.",
+        "tips": "Parc National pour safari photos. Réservez un guide.",
+        "security": "Zone de parc, accompagnés toujours d'un guide.",
+        "hebergement": "Lodge Campement. Budget: 15000-60000 CFA/nuit.",
+        "tourisme": "Safari, éléphants, lions, parc Niokolo-Koba."
+    },
+    "matam": {
+        "name": "Matam", "capital": "Matam", "lat": 15.6667, "lng": -13.2667,
+        "info": "Région sahélienne sur le fleuve Niger.",
+        "tips": "Essayez la traversée en pirogue sur le fleuve.",
+        "security": "Zone reculée, évitez les déplacements nocturnes.",
+        "hebergement": "Hôtel de Matam. Budget: 5000-20000 CFA/nuit.",
+        "tourisme": "Fleuve Niger, pirogues, culture Peul."
+    },
+    "tamba": {
+        "name": "Tambacounda", "capital": "Tambacounda", "lat": 13.7667, "lng": -13.6667,
+        "info": "Plus grande région, porte du Sahel.",
+        "tips": "Prévoyez un 4x4 pour les pistes rurales.",
+        "security": "Zone vaste, restez sur les routes principales.",
+        "hebergement": "Hôtel TAM. Budget: 6000-25000 CFA/nuit.",
+        "tourisme": "Parc Niokolo-Koba, brousse, faune."
+    },
+    "fatick": {
+        "name": "Fatick", "capital": "Fatick", "lat": 14.3333, "lng": -16.0833,
+        "info": "Région Sine-Saloum, lagunes et mangroves.",
+        "tips": "Visitez l'île de Joal-Fadiouth. Mélangez-vous à la population.",
+        "security": "Zone touristique calme.",
+        "hebergement": "Auberge de Fatick. Budget: 5000-30000 CFA/nuit.",
+        "tourisme": "Île de Joal-Fadiouth, mangroves, ossature de poisson."
+    }
 }
 
 all_regions = list(regions.keys())
@@ -134,6 +232,14 @@ def get_regions():
     return jsonify(regions)
 
 
+def format_time(hours):
+    h = int(hours)
+    m = int((hours - h) * 60)
+    if h > 0:
+        return f"{h}h {m}min"
+    return f"{m}min"
+
+
 @app.route('/api/dijkstra')
 def api_dijkstra():
     destination = request.args.get('destination')
@@ -145,9 +251,20 @@ def api_dijkstra():
     path_national, dist_national = dijkstra(start, destination, road_matrix_national)
     path_autoroute, dist_autoroute = dijkstra(start, destination, road_matrix_autoroute)
     
+    speed_national = 80
+    speed_autoroute = 100
+    
     return jsonify({
-        "national": {"path": path_national, "distance": dist_national},
-        "autoroute": {"path": path_autoroute, "distance": dist_autoroute}
+        "national": {
+            "path": path_national,
+            "distance": dist_national,
+            "time": format_time(dist_national / speed_national)
+        },
+        "autoroute": {
+            "path": path_autoroute,
+            "distance": dist_autoroute,
+            "time": format_time(dist_autoroute / speed_autoroute)
+        }
     })
 
 
@@ -261,9 +378,20 @@ def api_tsp():
     path_national, dist_national = two_phase_tsp(road_matrix_national, start)
     path_autoroute, dist_autoroute = two_phase_tsp(road_matrix_autoroute, start)
     
+    speed_national = 80
+    speed_autoroute = 100
+    
     return jsonify({
-        "national": {"path": path_national, "distance": dist_national},
-        "autoroute": {"path": path_autoroute, "distance": dist_autoroute}
+        "national": {
+            "path": path_national,
+            "distance": dist_national,
+            "time": format_time(dist_national / speed_national)
+        },
+        "autoroute": {
+            "path": path_autoroute,
+            "distance": dist_autoroute,
+            "time": format_time(dist_autoroute / speed_autoroute)
+        }
     })
 
 

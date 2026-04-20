@@ -171,6 +171,11 @@
             color: var(--text-secondary);
         }
 
+        .route-stats div {
+            display: flex;
+            gap: 5px;
+        }
+
         .route-stats span { font-weight: 500; color: var(--text-primary); }
 
         .route-list { list-style: none; margin-top: 10px; }
@@ -270,6 +275,7 @@
                         <h3>🛣️ Route Nationale</h3>
                         <div class="route-stats">
                             <div>Distance: <span id="nationalDist">0 km</span></div>
+                            <div>Durée: <span id="nationalTime">-</span></div>
                         </div>
                         <ul class="route-list" id="nationalList"></ul>
                     </div>
@@ -278,6 +284,7 @@
                         <h3>🛞 Autoroute</h3>
                         <div class="route-stats">
                             <div>Distance: <span id="autorouteDist">0 km</span></div>
+                            <div>Durée: <span id="autorouteTime">-</span></div>
                         </div>
                         <ul class="route-list" id="autorouteList"></ul>
                     </div>
@@ -370,7 +377,9 @@
             const aut = data.autoroute;
 
             document.getElementById('nationalDist').textContent = nat.distance + ' km';
+            document.getElementById('nationalTime').textContent = nat.time || '-';
             document.getElementById('autorouteDist').textContent = aut.distance + ' km';
+            document.getElementById('autorouteTime').textContent = aut.time || '-';
 
             const natList = document.getElementById('nationalList');
             natList.innerHTML = '';
@@ -390,7 +399,10 @@
                 <h4>${r.name}</h4>
                 <p><strong>Capitale:</strong> ${r.capital}</p>
                 <p>${r.info}</p>
-                <p><em>${r.tips}</em></p>
+                <p><strong>Conseils:</strong> ${r.tips || 'Non disponibles'}</p>
+                <p><strong>Sécurité:</strong> ${r.security || 'Non disponibles'}</p>
+                <p><strong>Hébergement:</strong> ${r.hebergement || 'Non disponibles'}</p>
+                <p><strong>Tourisme:</strong> ${r.tourisme || 'Non disponibles'}</p>
             `;
 
             drawRoutes(nat.path, aut.path);
@@ -481,7 +493,10 @@
                 <p><strong>Capitale:</strong> ${r.capital}</p>
                 <p><strong>Coordonnées:</strong> ${r.lat}, ${r.lng}</p>
                 <p>${r.info}</p>
-                <p><em>${r.tips}</em></p>
+                <p><strong>Conseils:</strong> ${r.tips || 'Non disponibles'}</p>
+                <p><strong>Sécurité:</strong> ${r.security || 'Non disponibles'}</p>
+                <p><strong>Hébergement:</strong> ${r.hebergement || 'Non disponibles'}</p>
+                <p><strong>Tourisme:</strong> ${r.tourisme || 'Non disponibles'}</p>
             `;
             if (markers[key]) { map.setView([r.lat, r.lng], 10); markers[key].openPopup(); }
         }
