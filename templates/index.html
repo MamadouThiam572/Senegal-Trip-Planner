@@ -469,7 +469,7 @@
 
         window.currentRouteData = null;
 
-        function drawRoutes(nationalPath, autoroutePath) {
+        async function drawRoutes(nationalPath, autoroutePath) {
             map.eachLayer(function(layer) {
                 if (layer instanceof L.Polyline) {
                     map.removeLayer(layer);
@@ -477,22 +477,46 @@
             });
             routeLayers = {};
 
-            drawSingleRoute(nationalPath, '#3b82f6', 'national');
-            drawSingleRoute(autoroutePath, '#f97316', 'autoroute');
+            await drawSingleRoute(nationalPath, '#3b82f6', 'national');
+            await drawSingleRoute(autoroutePath, '#f97316', 'autoroute');
         }
 
-        function drawSingleRoute(path, color, key) {
+        async function drawSingleRoute(path, color, key) {
             if (path.length < 2) return;
 
             const latLngs = path.map(k => [regions[k].lat, regions[k].lng]);
+            const allCoords = [];
             
-            routeLayers[key] = L.polyline(latLngs, { 
+            for (let i = 0; i < path.length - 1; i++) {
+                const from = [regions[path[i]].lat, regions[path[i]].lng];
+                const to = [regions[path[i+1]].lat, regions[path[i+1]].lng];
+                const coords = `${from[1]},${from[0]};${to[1]},${to[0]}`;
+                const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+                
+                try {
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    if (data.code === 'Ok' && data.routes && data.routes[0]) {
+                        const geojson = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                        allCoords.push(...geojson);
+                    } else {
+                        allCoords.push(from, to);
+                    }
+                } catch (e) {
+                    allCoords.push(from, to);
+                }
+            }
+            
+            routeLayers[key] = L.polyline(allCoords, { 
                 color: color, 
                 weight: 4, 
-                opacity: 0.8
+                opacity: 0.8,
+                lineCap: 'round'
             }).addTo(map);
 
-            map.fitBounds(routeLayers[key].getBounds(), { padding: [40, 40] });
+            if (routeLayers[key]) {
+                map.fitBounds(routeLayers[key].getBounds(), { padding: [40, 40] });
+            }
         }
 
         function showRegionDetails(key) {
