@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import math
+import urllib.request
+import json
 
 regions = {
     "dakar": {
@@ -318,6 +320,31 @@ def format_time(hours):
     return f"{m}min"
 
 
+def get_osrm_route(path):
+    """Récupère l'itinéraire réel depuis OSRM."""
+    if len(path) < 2:
+        return []
+    
+    coordinates = []
+    for region in path:
+        r = regions[region]
+        coordinates.append(f"{r['lng']},{r['lat']}")
+    
+    coords_str = ";".join(coordinates)
+    url = f"https://router.project-osrm.org/route/v1/driving/{coords_str}?overview=full&geometries=geojson"
+    
+    try:
+        with urllib.request.urlopen(url, timeout=10) as response:
+            data = json.loads(response.read().decode())
+        
+        if data.get('code') == 'Ok' and data.get('routes'):
+            return data['routes'][0]['geometry']['coordinates']
+    except Exception as e:
+        print(f"Erreur OSRM: {e}")
+    
+    return []
+
+
 class SenegalTripPlannerApp:
     def __init__(self, root):
         self.root = root
@@ -430,7 +457,7 @@ class SenegalTripPlannerApp:
         self.start_combo.bind("<<ComboboxSelected>>", self.on_region_select)
         self.dest_combo.bind("<<ComboboxSelected>>", self.on_dest_select)
     
-    def draw_map(self, path_national=None, path_autoroute=None):
+    def draw_map(self, path_national=None, path_autoroute=None, real_nat=None, real_aut=None):
         self.canvas.delete("all")
         
         min_lat = min(regions[k]['lat'] for k in regions) - 0.5
@@ -455,34 +482,45 @@ class SenegalTripPlannerApp:
             self.canvas.create_oval(x-4, y-4, x+4, y+4, fill="#4a90a4", outline="#e8e8e8")
             self.canvas.create_text(x+12, y, text=r['capital'], fill="#e8e8e8", font=("Arial", 8, "bold"), anchor="w")
         
-        if path_autoroute and len(path_autoroute) > 1:
-            coords = []
-            for region in path_autoroute:
-                r = regions[region]
-                coords.append((r['lat'], r['lng']))
-            
-            for i in range(len(coords) - 1):
-                x1, y1 = map_coords(coords[i][0], coords[i][1])
-                x2, y2 = map_coords(coords[i+1][0], coords[i+1][1])
-                self.canvas.create_line(x1, y1, x2, y2, fill="#f97316", width=3, arrow=tk.LAST)
-                mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
-                self.canvas.create_oval(mid_x-3, mid_y-3, mid_x+3, mid_y+3, fill="#f97316", outline="#fff")
+        if real_nat and len(real_nat) > 1:
+            for i in range(len(real_nat) - 1):
+                x1, y1 = map_coords(real_nat[i][1], real_nat[i][0])
+                x2, y2 = map_coords(real_nat[i+1][1], real_nat[i+1][0])
+                self.canvas.create_line(x1, y1, x2, y2, fill="#3b82f6", width=3)
         
-        if path_national and len(path_national) > 1:
-            coords = []
-            for region in path_national:
-                r = regions[region]
-                coords.append((r['lat'], r['lng']))
-            
-            for i in range(len(coords) - 1):
-                x1, y1 = map_coords(coords[i][0], coords[i][1])
-                x2, y2 = map_coords(coords[i+1][0], coords[i+1][1])
-                self.canvas.create_line(x1, y1, x2, y2, fill="#3b82f6", width=2, arrow=tk.LAST)
-                mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
-                self.canvas.create_oval(mid_x-2, mid_y-2, mid_x+2, mid_y+2, fill="#3b82f6", outline="#fff")
+        if path_national and len(path_national) > 1 and not real_nat:
+            for i in range(len(path_national) - 1):
+                r1 = regions[path_national[i]]
+                r2 = regions[path_national[i + 1]]
+                x1, y1 = map_coords(r1['lat'], r1['lng'])
+                x2, y2 = map_coords(r2['lat'], r2['lng'])
+                self.canvas.create_line(x1, y1, x2, y2, fill="#3b82f6", width=2, dash=(5, 3))
         
-        self.canvas.create_text(width/2, height-10, text="█ Bleu: Route Nationale  █ Orange: Autoroute", 
-                           fill="#a0a0a0", font=("Arial", 8))
+        if path_autoroute and len(path_autoroute) > 1 and not real_aut:
+            for i in range(len(path_autoroute) - 1):
+                r1 = regions[path_autoroute[i]]
+                r2 = regions[path_autoroute[i + 1]]
+                x1, y1 = map_coords(r1['lat'], r1['lng'])
+                x2, y2 = map_coords(r2['lat'], r2['lng'])
+                self.canvas.create_line(x1, y1, x2, y2, fill="#f97316", width=2, dash=(5, 3))
+        
+        if real_aut and len(real_aut) > 1:
+            for i in range(len(real_aut) - 1):
+                x1, y1 = map_coords(real_aut[i][1], real_aut[i][0])
+                x2, y2 = map_coords(real_aut[i+1][1], real_aut[i+1][0])
+                self.canvas.create_line(x1, y1, x2, y2, fill="#f97316", width=3)
+        
+        if path_autoroute and len(path_autoroute) > 1 and not real_aut:
+            for i in range(len(path_autoroute) - 1):
+                r1 = regions[path_autoroute[i]]
+                r2 = regions[path_autoroute[i + 1]]
+                x1, y1 = map_coords(r1['lat'], r1['lng'])
+                x2, y2 = map_coords(r2['lat'], r2['lng'])
+                self.canvas.create_line(x1, y1, x2, y2, fill="#f97316", width=2, dash=(5, 3))
+        
+        legend_y = height - 15
+        self.canvas.create_text(20, legend_y, text="━ Bleu: Route Nationale", fill="#3b82f6", font=("Arial", 8), anchor="w")
+        self.canvas.create_text(200, legend_y, text="━ Orange: Autoroute (réel)", fill="#f97316", font=("Arial", 8), anchor="w")
     
     def on_region_select(self, event):
         key = self.get_region_key_from_name(self.start_var.get())
@@ -533,6 +571,9 @@ class SenegalTripPlannerApp:
         self.selected_path_national = path_national
         self.selected_path_autoroute = path_autoroute
         
+        real_nat = get_osrm_route(path_national)
+        real_aut = get_osrm_route(path_autoroute)
+        
         self.national_label.config(text=f"Route Nationale: {dist_national} km | {nat_time}")
         self.national_list.delete(0, "end")
         for i, region in enumerate(path_national):
@@ -543,7 +584,7 @@ class SenegalTripPlannerApp:
         for i, region in enumerate(path_autoroute):
             self.autoroute_list.insert(i, f"{i+1}. {regions[region]['name']}")
         
-        self.draw_map(path_national, path_autoroute)
+        self.draw_map(path_national, path_autoroute, real_nat, real_aut)
         self.show_region_info(dest)
     
     def calculate_tsp(self):
@@ -562,6 +603,9 @@ class SenegalTripPlannerApp:
         self.selected_path_national = path_national
         self.selected_path_autoroute = path_autoroute
         
+        real_nat = get_osrm_route(path_national)
+        real_aut = get_osrm_route(path_autoroute)
+        
         self.national_label.config(text=f"Route Nationale (TSP): {dist_national} km | {nat_time}")
         self.national_list.delete(0, "end")
         for i, region in enumerate(path_national):
@@ -572,7 +616,7 @@ class SenegalTripPlannerApp:
         for i, region in enumerate(path_autoroute):
             self.autoroute_list.insert(i, f"{i+1}. {regions[region]['name']}")
         
-        self.draw_map(path_national, path_autoroute)
+        self.draw_map(path_national, path_autoroute, real_nat, real_aut)
         
         dest = path_national[-1]
         self.show_region_info(dest)
