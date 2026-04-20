@@ -241,8 +241,9 @@
                     <label>Destination</label>
                     <select id="destinationSelect"><option value="">Sélectionner</option></select>
                 </div>
-                <button class="primary" onclick="calculateShortestPath()">Chemin optimal</button>
-                <button onclick="calculateTSP()">Circuit total</button>
+                <button class="primary" onclick="calculateDijkstra()">Dijkstra</button>
+                <button onclick="calculateBellman()">Bellman-Ford</button>
+                <button onclick="calculateTSP()">TSP</button>
                 <button onclick="resetMap()">Réinitialiser</button>
             </div>
             <div class="legend">
@@ -270,6 +271,7 @@
                         <h3>🛣️ Route Nationale</h3>
                         <div class="route-stats">
                             <div>Distance: <span id="nationalDist">0 km</span></div>
+                            <div>Durée: <span id="nationalTime">-</span></div>
                         </div>
                         <ul class="route-list" id="nationalList"></ul>
                     </div>
@@ -278,6 +280,7 @@
                         <h3>🛞 Autoroute</h3>
                         <div class="route-stats">
                             <div>Distance: <span id="autorouteDist">0 km</span></div>
+                            <div>Durée: <span id="autorouteTime">-</span></div>
                         </div>
                         <ul class="route-list" id="autorouteList"></ul>
                     </div>
@@ -329,7 +332,7 @@
             setTimeout(() => el.classList.remove('active'), 4000);
         }
 
-        async function calculateShortestPath() {
+        async function calculateDijkstra() {
             const dest = document.getElementById('destinationSelect').value;
             const start = document.getElementById('startSelect').value;
             if (!dest) { showError('Sélectionnez une destination'); return; }
@@ -339,6 +342,25 @@
 
             try {
                 const res = await fetch(`/api/dijkstra?destination=${dest}&start=${start}`);
+                const data = await res.json();
+                
+                if (data.error) { showError(data.error); }
+                else { displayResults(data); }
+            } catch (e) { showError('Erreur de connexion'); }
+            
+            document.getElementById('loading').classList.remove('active');
+        }
+
+        async function calculateBellman() {
+            const dest = document.getElementById('destinationSelect').value;
+            const start = document.getElementById('startSelect').value;
+            if (!dest) { showError('Sélectionnez une destination'); return; }
+
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+
+            try {
+                const res = await fetch(`/api/bellman?destination=${dest}&start=${start}`);
                 const data = await res.json();
                 
                 if (data.error) { showError(data.error); }
@@ -370,7 +392,9 @@
             const aut = data.autoroute;
 
             document.getElementById('nationalDist').textContent = nat.distance + ' km';
+            document.getElementById('nationalTime').textContent = nat.time || '-';
             document.getElementById('autorouteDist').textContent = aut.distance + ' km';
+            document.getElementById('autorouteTime').textContent = aut.time || '-';
 
             const natList = document.getElementById('nationalList');
             natList.innerHTML = '';
@@ -390,7 +414,10 @@
                 <h4>${r.name}</h4>
                 <p><strong>Capitale:</strong> ${r.capital}</p>
                 <p>${r.info}</p>
-                <p><em>${r.tips}</em></p>
+                <p><strong>Conseils:</strong> ${r.tips || 'Non disponibles'}</p>
+                <p><strong>Sécurité:</strong> ${r.security || 'Non disponibles'}</p>
+                <p><strong>Hébergement:</strong> ${r.hebergement || 'Non disponibles'}</p>
+                <p><strong>Tourisme:</strong> ${r.tourisme || 'Non disponibles'}</p>
             `;
 
             drawRoutes(nat.path, aut.path);
@@ -481,7 +508,10 @@
                 <p><strong>Capitale:</strong> ${r.capital}</p>
                 <p><strong>Coordonnées:</strong> ${r.lat}, ${r.lng}</p>
                 <p>${r.info}</p>
-                <p><em>${r.tips}</em></p>
+                <p><strong>Conseils:</strong> ${r.tips || 'Non disponibles'}</p>
+                <p><strong>Sécurité:</strong> ${r.security || 'Non disponibles'}</p>
+                <p><strong>Hébergement:</strong> ${r.hebergement || 'Non disponibles'}</p>
+                <p><strong>Tourisme:</strong> ${r.tourisme || 'Non disponibles'}</p>
             `;
             if (markers[key]) { map.setView([r.lat, r.lng], 10); markers[key].openPopup(); }
         }
