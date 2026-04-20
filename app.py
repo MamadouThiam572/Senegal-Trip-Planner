@@ -405,10 +405,10 @@ class SenegalTripPlannerApp:
         canvas_frame = tk.Frame(main, bg="#16213e", padx=15, pady=15)
         canvas_frame.pack(side="right", fill="both", expand=True)
         
-        tk.Label(canvas_frame, text="CARTE", font=("Arial", 12, "bold"),
+        tk.Label(canvas_frame, text="CARTE DU SÉNÉGAL", font=("Arial", 12, "bold"),
               bg="#16213e", fg="#e8e8e8").pack(anchor="w")
         
-        self.canvas = tk.Canvas(canvas_frame, width=380, height=400, bg="#1f2b47")
+        self.canvas = tk.Canvas(canvas_frame, width=450, height=450, bg="#0d1526", highlightthickness=0)
         self.canvas.pack(pady=10)
         self.draw_map()
         
@@ -433,14 +433,16 @@ class SenegalTripPlannerApp:
     def draw_map(self, path_national=None, path_autoroute=None):
         self.canvas.delete("all")
         
-        min_lat = min(regions[k]['lat'] for k in regions)
-        max_lat = max(regions[k]['lat'] for k in regions)
-        min_lng = min(regions[k]['lng'] for k in regions)
-        max_lng = max(regions[k]['lng'] for k in regions)
+        min_lat = min(regions[k]['lat'] for k in regions) - 0.5
+        max_lat = max(regions[k]['lat'] for k in regions) + 0.5
+        min_lng = min(regions[k]['lng'] for k in regions) - 0.5
+        max_lng = max(regions[k]['lng'] for k in regions) + 0.5
         
-        width = 380
-        height = 400
-        padding = 30
+        width = 450
+        height = 450
+        padding = 50
+        
+        self.canvas.config(width=width, height=height)
         
         def map_coords(lat, lng):
             x = padding + (lng - min_lng) / (max_lng - min_lng) * (width - 2 * padding)
@@ -449,24 +451,38 @@ class SenegalTripPlannerApp:
         
         for key, r in regions.items():
             x, y = map_coords(r['lat'], r['lng'])
-            self.canvas.create_oval(x-5, y-5, x+5, y+5, fill="#4a90a4", outline="#e8e8e8")
-            self.canvas.create_text(x+8, y-10, text=r['name'], fill="#e8e8e8", font=("Arial", 7))
+            self.canvas.create_oval(x-8, y-8, x+8, y+8, fill="#1f2b47", outline="#4a90a4", width=2)
+            self.canvas.create_oval(x-4, y-4, x+4, y+4, fill="#4a90a4", outline="#e8e8e8")
+            self.canvas.create_text(x+12, y, text=r['capital'], fill="#e8e8e8", font=("Arial", 8, "bold"), anchor="w")
         
-        if path_national:
-            for i in range(len(path_national) - 1):
-                r1 = regions[path_national[i]]
-                r2 = regions[path_national[i + 1]]
-                x1, y1 = map_coords(r1['lat'], r1['lng'])
-                x2, y2 = map_coords(r2['lat'], r2['lng'])
-                self.canvas.create_line(x1, y1, x2, y2, fill="#3b82f6", width=2)
+        if path_autoroute and len(path_autoroute) > 1:
+            coords = []
+            for region in path_autoroute:
+                r = regions[region]
+                coords.append((r['lat'], r['lng']))
+            
+            for i in range(len(coords) - 1):
+                x1, y1 = map_coords(coords[i][0], coords[i][1])
+                x2, y2 = map_coords(coords[i+1][0], coords[i+1][1])
+                self.canvas.create_line(x1, y1, x2, y2, fill="#f97316", width=3, arrow=tk.LAST)
+                mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
+                self.canvas.create_oval(mid_x-3, mid_y-3, mid_x+3, mid_y+3, fill="#f97316", outline="#fff")
         
-        if path_autoroute:
-            for i in range(len(path_autoroute) - 1):
-                r1 = regions[path_autoroute[i]]
-                r2 = regions[path_autoroute[i + 1]]
-                x1, y1 = map_coords(r1['lat'], r1['lng'])
-                x2, y2 = map_coords(r2['lat'], r2['lng'])
-                self.canvas.create_line(x1, y1, x2, y2, fill="#f97316", width=2)
+        if path_national and len(path_national) > 1:
+            coords = []
+            for region in path_national:
+                r = regions[region]
+                coords.append((r['lat'], r['lng']))
+            
+            for i in range(len(coords) - 1):
+                x1, y1 = map_coords(coords[i][0], coords[i][1])
+                x2, y2 = map_coords(coords[i+1][0], coords[i+1][1])
+                self.canvas.create_line(x1, y1, x2, y2, fill="#3b82f6", width=2, arrow=tk.LAST)
+                mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
+                self.canvas.create_oval(mid_x-2, mid_y-2, mid_x+2, mid_y+2, fill="#3b82f6", outline="#fff")
+        
+        self.canvas.create_text(width/2, height-10, text="█ Bleu: Route Nationale  █ Orange: Autoroute", 
+                           fill="#a0a0a0", font=("Arial", 8))
     
     def on_region_select(self, event):
         key = self.get_region_key_from_name(self.start_var.get())
