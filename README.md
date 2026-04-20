@@ -2,36 +2,56 @@
 
 _application web de planification de voyage au Sénégal_
 
-## Présentation
+## Présentation du projet
 
-Senegal Trip Planner est une application Flask interactive qui permet de planifier des voyages à travers les 14 régions du Sénégal. Elle propose deux fonctionnalités principales :
+Senegal Trip Planner est une application web développée dans le cadre d'un projet académique qui permet de planifier des voyages à travers les 14 régions du Sénégal. Elle propose deux fonctionnalités principales :
 
-1. **Calcul d'itinéraire** - Trouve le chemin le plus court entre deux régions en utilisant l'algorithme de Dijkstra
-2. **Circuit touristique (TSP)** - Calcule le parcours optimal pour visiter toutes les régions du Sénégal
+1. **Calcul d'itinéraire** — Trouve le chemin le plus court entre deux régions en utilisant l'algorithme de Dijkstra
+2. **Circuit touristique (TSP)** — Calcule le parcours optimal pour visiter toutes les régions du Sénégal en utilisant une approche nearest neighbor combinée avec 2-opt
 
-## Les 14 régions
+## Les 14 régions du Sénégal
 
-| Région | Capitale | Particularité |
-|--------|----------|---------------|
-| Dakar | Dakar | Capitale du Sénégal |
-| Thiès | Thiès | Deuxième ville, pôle industriel |
-| Diourbel | Diourbel | Capitale du Mboss, région religieuse |
-| Kaolack | Kaolack | Centre économique du bassin arachidier |
-| Saint-Louis | Saint-Louis | Ancienne capitale coloniale, patrimoine UNESCO |
-| Louga | Louga | Région sahélienne, élevage et commerce |
-| Kolda | Kolda | Région verdoyante au sud |
-| Ziguinchor | Ziguinchor | Capitale du sud, vibes caribéennes |
-| Sédhiou | Sédhiou | Transition Sine et Saloum |
-| Kaffrine | Kaffrine | Cœur du pays Serer |
-| Kédougou | Kédougou | Plus orientale, reserve Niokolo-Koba |
-| Matam | Matam | Sahélienne sur le fleuve Niger |
-| Tambacounda | Tambacounda | Plus grande région, porte du Sahel |
-| Fatick | Fatick | Sine-Saloum, lagunes et mangroves |
+| # | Région | Capitale | Latitude | Longitude |
+|---|--------|----------|----------|-----------|
+| 1 | Dakar | Dakar | 14.7167 | -17.4671 |
+| 2 | Thiès | Thiès | 14.7941 | -16.9639 |
+| 3 | Diourbel | Diourbel | 14.7167 | -16.2333 |
+| 4 | Kaolack | Kaolack | 14.1500 | -16.0833 |
+| 5 | Saint-Louis | Saint-Louis | 16.0333 | -16.5000 |
+| 6 | Louga | Louga | 15.6333 | -15.6333 |
+| 7 | Kolda | Kolda | 12.8833 | -14.9500 |
+| 8 | Ziguinchor | Ziguinchor | 12.5833 | -16.2667 |
+| 9 | Sédhiou | Sédhiou | 12.7167 | -15.1833 |
+| 10 | Kaffrine | Kaffrine | 14.1000 | -15.4167 |
+| 11 | Kédougou | Kédougou | 12.5667 | -12.1833 |
+| 12 | Matam | Matam | 15.6667 | -13.2667 |
+| 13 | Tambacounda | Tambacounda | 13.7667 | -13.6667 |
+| 14 | Fatick | Fatick | 14.3333 | -16.0833 |
 
-## Modes de route
+Chaque région possède des informations descriptives et des conseils pratiques pour les voyageurs.
 
-- **Route nationale** - Roads classiques
-- **Autoroute** - Aéroports et routes rapides
+## Types de routes
+
+L'application propose deux modes de calcul d'itinéraire :
+
+- **Route nationale** — Routes classiques empruntees
+- **Autoroute** — Routes rapides et aeroports
+
+Les distances sont-stockees dans deux matrices distinctes permettant de comparer les deux options.
+
+## Algorithmes utilises
+
+### Dijkstra (Itinéraire le plus court)
+
+L'algorithme de Dijkstra est implémente pour trouver le chemin le plus court entre deux regions. Il utilise une approche gloutonne avec une file de priorite pour explorer les nœœuds par distance croissante.
+
+### TSP (Problème du voyageur de commerce)
+
+Pour le circuit touristique, l'application utilise :
+1. **Nearest Neighbor** — Construction initiale d'un parcours
+2. **2-opt** — Optimisation locale pour améliorer le parcours
+
+Cette combinaison permet d'obtenir un bon compromis entre qualité de la solution et temps de calcul.
 
 ## Installation
 
@@ -44,7 +64,7 @@ cd Senegal-Trip-Planner
 pip install -r requirements.txt
 ```
 
-## Utilisation
+## Lancement
 
 ```bash
 python3 app.py
@@ -54,31 +74,55 @@ Puis ouvrir http://localhost:5000 dans votre navigateur.
 
 ## API Endpoints
 
-| Endpoint | Description |
-|---------|-------------|
-| `GET /api/regions` | Liste toutes les régions avec leurs infos |
-| `GET /api/dijkstra?start=X&destination=Y` | Itinéraire entre X et Y |
-| `GET /api/tsp?start=X` | Circuit optimal depuis X |
+| Endpoint | Methode | Description |
+|----------|---------|-------------|
+| `/api/regions` | GET | Liste toutes les régions avec leurs infos |
+| `/api/dijkstra` | GET | Itinéraire entre deux régions |
+| `/api/tsp` | GET | Circuit optimal depuis une région |
 
-## Exemple d'utilisation API
+## Exemples d'utilisation API
 
 ```bash
-# Itinéraire de Dakar à Ziguinchor
+# Itinéraire de Dakar à Ziguinchor (route nationale + autoroute)
 curl "http://localhost:5000/api/dijkstra?start=dakar&destination=ziguinchor"
 
 # Circuit touristique depuis Dakar
 curl "http://localhost:5000/api/tsp?start=dakar"
+
+# Liste des régions
+curl "http://localhost:5000/api/regions"
 ```
 
-## Déployé
+## Structure du projet
 
-Accessible en ligne : https://senegal-trip-planner.streamlit.app
+```
+Senegal_Trip_Planner/
+├── app.py                 # Application Flask (API + routes)
+├── templates/
+│   └── index.html        # Interface utilisateur
+├── requirements.txt      # Dépendances Python
+└── README.md           # Documentation
+```
 
-## Technologie
+## Interface utilisateur
 
-- **Backend** : Flask (Python)
+L'application dispose d'une interface web interactive avec :
+- Carte Leaflet displayant les 14 régions
+- Liste déroulante pour sélectionner départ et destination
+- Boutons pour calculerITINERAIRE ou circuit TSP
+- Comparaison visuelle route nationale vs autoroute
+- Informations sur chaque région
+
+## Technologies
+
+- **Backend** : Flask (Python 3)
 - **Frontend** : HTML, CSS, JavaScript
-- **Algorithmes** : Dijkstra, Nearest Neighbor + 2-opt
+- **Carte** : Leaflet + OpenStreetMap
+- **Algorithmes** : Dijkstra, Nearest Neighbor, 2-opt
+
+## Auteurs
+
+Projet développé dans le cadre d'un projet académique.
 
 ---
 
