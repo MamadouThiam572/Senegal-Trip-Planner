@@ -449,10 +449,11 @@
             natSection.classList.remove('active');
             autSection.classList.remove('active');
             
-            if (type === 'both' || type === 'national') natSection.classList.add('active');
-            if (type === 'both' || type === 'autoroute') autSection.classList.add('active');
-
-            Object.values(routeLayers).forEach(l => map.removeLayer(l));
+            map.eachLayer(function(layer) {
+                if (layer instanceof L.Polyline) {
+                    map.removeLayer(layer);
+                }
+            });
             routeLayers = {};
 
             const data = window.currentRouteData;
@@ -469,7 +470,11 @@
         window.currentRouteData = null;
 
         function drawRoutes(nationalPath, autoroutePath) {
-            Object.values(routeLayers).forEach(l => map.removeLayer(l));
+            map.eachLayer(function(layer) {
+                if (layer instanceof L.Polyline) {
+                    map.removeLayer(layer);
+                }
+            });
             routeLayers = {};
 
             drawSingleRoute(nationalPath, '#3b82f6', 'national');
@@ -506,7 +511,11 @@
         }
 
         function resetMap() {
-            Object.values(routeLayers).forEach(l => map.removeLayer(l));
+            map.eachLayer(function(layer) {
+                if (layer instanceof L.Polyline) {
+                    map.removeLayer(layer);
+                }
+            });
             routeLayers = {};
             document.getElementById('destinationSelect').value = '';
             document.getElementById('results').classList.remove('active');
