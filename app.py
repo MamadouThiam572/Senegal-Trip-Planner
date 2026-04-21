@@ -1,7 +1,13 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, send_from_directory
+from typing import Dict, List, Optional
 import math
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('static', filename)
 
 regions = {
     "dakar": {
@@ -123,36 +129,73 @@ all_regions = list(regions.keys())
 distances_national = {
     "dakar": {"thies": 46, "fatick": 148, "kaolack": 188},
     "thies": {"dakar": 46, "diourbel": 77, "kaolack": 116, "fatick": 75, "kaffrine": 90, "louga": 155, "saintlouis": 146},
-    "diourbel": {"thies": 77, "kaolack": 85, "saintlouis": 120, "louga": 90, "kaffrine": 65},
+    "diourbel": {"thies": 77, "kaolack": 85, "saintlouis": 120, "louga": 90, "kaffrine": 65, "fatick": 95},
     "kaolack": {"thies": 116, "diourbel": 85, "fatick": 65, "kaffrine": 58, "sedhiou": 135, "ziguinchor": 205, "tamba": 285, "kolda": 185},
-    "saintlouis": {"diourbel": 120, "louga": 85, "matam": 180},
+    "saintlouis": {"diourbel": 120, "louga": 85, "matam": 180, "thies": 146},
     "louga": {"saintlouis": 85, "diourbel": 90, "matam": 110, "thies": 155},
-    "kolda": {"ziguinchor": 105, "sedhiou": 65, "tamba": 145, "kaolack": 185},
+    "kolda": {"ziguinchor": 105, "sedhiou": 65, "tamba": 145, "kaolack": 185, "kedougou": 305},
     "ziguinchor": {"kolda": 105, "sedhiou": 85},
     "sedhiou": {"kaolack": 135, "kolda": 65, "ziguinchor": 85, "fatick": 115},
     "kaffrine": {"thies": 90, "diourbel": 65, "kaolack": 58, "tamba": 105, "fatick": 78},
-    "kedougou": {"tamba": 185, "kolda": 305},
-    "matam": {"saintlouis": 180, "louga": 110, "tamba": 160},
+    "kedougou": {"tamba": 185, "kolda": 305, "matam": 280},
+    "matam": {"saintlouis": 180, "louga": 110, "tamba": 160, "kedougou": 280},
     "tamba": {"kaffrine": 105, "matam": 160, "kolda": 145, "kedougou": 185, "kaolack": 285},
-    "fatick": {"kaolack": 65, "kaffrine": 78, "sedhiou": 115, "thies": 75}
+    "fatick": {"kaolack": 65, "kaffrine": 78, "sedhiou": 115, "thies": 75, "diourbel": 95}
 }
+
+# Add missing cross-connections
+distances_national["dakar"]["sedhiou"] = 280
+distances_national["dakar"]["kolda"] = 300
+distances_national["dakar"]["ziguinchor"] = 350
+distances_national["dakar"]["kedougou"] = 450
+distances_national["dakar"]["matam"] = 350
+
+distances_national["thies"]["sedhiou"] = 200
+distances_national["thies"]["kolda"] = 220
+distances_national["thies"]["ziguinchor"] = 250
+distances_national["thies"]["kedougou"] = 350
+distances_national["thies"]["matam"] = 280
+
+distances_national["diourbel"]["sedhiou"] = 180
+distances_national["diourbel"]["kolda"] = 200
+distances_national["diourbel"]["ziguinchor"] = 230
+distances_national["diourbel"]["kedougou"] = 320
+distances_national["diourbel"]["matam"] = 200
 
 distances_autoroute = {
     "dakar": {"thies": 42, "fatick": 140, "kaolack": 175},
     "thies": {"dakar": 42, "diourbel": 72, "kaolack": 110, "fatick": 68, "kaffrine": 85, "louga": 148, "saintlouis": 140},
-    "diourbel": {"thies": 72, "kaolack": 80, "saintlouis": 115, "louga": 85, "kaffrine": 60},
+    "diourbel": {"thies": 72, "kaolack": 80, "saintlouis": 115, "louga": 85, "kaffrine": 60, "fatick": 88},
     "kaolack": {"thies": 110, "diourbel": 80, "fatick": 58, "kaffrine": 55, "sedhiou": 125, "ziguinchor": 192, "tamba": 268, "kolda": 172},
-    "saintlouis": {"diourbel": 115, "louga": 78, "matam": 170},
+    "saintlouis": {"diourbel": 115, "louga": 78, "matam": 170, "thies": 140},
     "louga": {"saintlouis": 78, "diourbel": 85, "matam": 105, "thies": 148},
-    "kolda": {"ziguinchor": 98, "sedhiou": 58, "tamba": 135, "kaolack": 172},
+    "kolda": {"ziguinchor": 98, "sedhiou": 58, "tamba": 135, "kaolack": 172, "kedougou": 288},
     "ziguinchor": {"kolda": 98, "sedhiou": 75},
     "sedhiou": {"kaolack": 125, "kolda": 58, "ziguinchor": 75, "fatick": 105},
     "kaffrine": {"thies": 85, "diourbel": 60, "kaolack": 55, "tamba": 95, "fatick": 70},
-    "kedougou": {"tamba": 172, "kolda": 288},
-    "matam": {"saintlouis": 170, "louga": 105, "tamba": 150},
+    "kedougou": {"tamba": 172, "kolda": 288, "matam": 260},
+    "matam": {"saintlouis": 170, "louga": 105, "tamba": 150, "kedougou": 260},
     "tamba": {"kaffrine": 95, "matam": 150, "kolda": 135, "kedougou": 172, "kaolack": 268},
-    "fatick": {"kaolack": 58, "kaffrine": 70, "sedhiou": 105, "thies": 68}
+    "fatick": {"kaolack": 58, "kaffrine": 70, "sedhiou": 105, "thies": 68, "diourbel": 88}
 }
+
+distances_autoroute["dakar"]["sedhiou"] = 260
+distances_autoroute["dakar"]["kolda"] = 280
+distances_autoroute["dakar"]["ziguinchor"] = 320
+distances_autoroute["dakar"]["kedougou"] = 420
+distances_autoroute["dakar"]["matam"] = 330
+
+distances_autoroute["thies"]["sedhiou"] = 185
+distances_autoroute["thies"]["kolda"] = 205
+distances_autoroute["thies"]["ziguinchor"] = 235
+distances_autoroute["thies"]["kedougou"] = 330
+distances_autoroute["thies"]["matam"] = 265
+
+distances_autoroute["diourbel"]["sedhiou"] = 165
+distances_autoroute["diourbel"]["kolda"] = 185
+distances_autoroute["diourbel"]["ziguinchor"] = 215
+distances_autoroute["diourbel"]["kedougou"] = 300
+distances_autoroute["diourbel"]["matam"] = 185
 
 
 def haversine(lat1, lon1, lat2, lon2):
@@ -206,11 +249,13 @@ def dijkstra(start, end, matrix):
         unvisited.remove(current)
 
         for neighbor in all_regions:
-            if neighbor in unvisited and 0 < matrix[current][neighbor] < 9999:
-                new_dist = dist[current] + matrix[current][neighbor]
-                if new_dist < dist[neighbor]:
-                    dist[neighbor] = new_dist
-                    prev[neighbor] = current
+            if neighbor in unvisited:
+                edge_dist = matrix[current].get(neighbor, 9999)
+                if 0 < edge_dist < 9999:
+                    new_dist = dist[current] + edge_dist
+                    if new_dist < dist[neighbor]:
+                        dist[neighbor] = new_dist
+                        prev[neighbor] = current
 
     path = []
     current = end
