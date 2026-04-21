@@ -1,4 +1,4 @@
-# Projet : Senegal Trip Planner
+# Senegal Trip Planner
 
 ## 1. Introduction et Contexte
 
@@ -21,6 +21,8 @@ Créer une application en réseau basée sur l'algorithme de Dijkstra, permettan
 - Affichage des 14 régions sur une carte OpenStreetMap
 - Chaque région est marquée avec sa capitale
 - Possibilité de cliquer sur les régions pour voir les informations associées
+- Affichage des itinéraires avec真实的道路（非直线）
+- Support du mode hors ligne (PWA)
 
 ### 2.2 Les 14 Régions du Sénégal
 
@@ -72,7 +74,14 @@ Créer une application en réseau basée sur l'algorithme de Dijkstra, permettan
 | Route Nationale | 80 km/h |
 | Autoroute | 100 km/h |
 
-### 2.6 Informations Utiles
+### 2.6 Mode Hors Ligne (PWA)
+
+- Support hors ligne via Service Worker
+- Tuiles cartographiques en cache
+- Itinéraires pré-enregistrés pour le mode hors ligne
+- Installation comme application mobile
+
+### 2.7 Informations Utiles
 
 Pour chaque région :
 - Informations touristiques ou culturelles
@@ -92,9 +101,11 @@ Pour chaque région :
 │  HTML5 + CSS3 + JavaScript              │
 │  Leaflet.js (Carte)                   │
 │  OpenStreetMap (Tuiles)              │
+│  OSRM (Routage réel)                  │
+│  Service Worker (Offline)              │
 └──────────────────┬──────────────────────┘
-                   │ HTTP
-                   ▼
+                    │ HTTP
+                    ▼
 ┌─────────────────────────────────────────────┐
 │           BACKEND (Flask - Python)         │
 │  ┌─────────────────────────────────┐    │
@@ -117,11 +128,18 @@ Pour chaque région :
 
 ```
 Senegal_Trip_Planner/
-├── app.py                 # Application Flask (Backend)
-├── README.md              # Documentation
-├── requirements.txt       # Dépendances Python
-└── templates/
-    └── index.html        # Interface utilisateur (Frontend)
+├── app.py                    # Application Flask (Backend)
+├── README.md                 # Documentation
+├── requirements.txt          # Dépendances Python
+├── templates/
+│   └── index.html           # Interface utilisateur (Frontend)
+└── static/
+    ├── sw.js                 # Service Worker (Offline)
+    ├── offline_engine.js     # Moteur de routage hors ligne
+    ├── offline_routes.js     # 25+ itinéraires pré-enregistrés
+    ├── manifest.json        # Manifest PWA
+    ├── icon-192.png         # Icône PWA
+    └── icon-512.png         # Icône PWA
 ```
 
 ---
@@ -152,6 +170,12 @@ python3 app.py
 
 L'application est accessible sur : **http://127.0.0.1:5000**
 
+### 4.4 Installation PWA (Optionnel)
+
+1. Ouvrir l'application dans Chrome/Edge
+2. Cliquer sur "Installer" dans la barre d'adresse
+3. L'application fonctionne maintenant hors ligne
+
 ---
 
 ## 5. Guide Utilisation
@@ -161,7 +185,7 @@ L'application est accessible sur : **http://127.0.0.1:5000**
 L'interface se compose de :
 
 1. **Carte** - Affichage des 14 régions avec Leaflet
-2. **Contrôles** - Sélection départ/destination et boutons算法
+2. **Contrôles** - Sélection départ/destination et boutons algorithmes
 3. **Résultats** - Itinéraire calculé avec distance et durée
 
 ### 5.2 Calcul d'Itinéraire
@@ -171,7 +195,13 @@ L'interface se compose de :
 3. Cliquer sur **"Dijkstra"**, **"Bellman-Ford"** ou **"TSP"**
 4. Consulter les résultats sur la carte et dans le panneau latéral
 
-### 5.3 Informations des Régions
+### 5.3 Mode Hors Ligne
+
+- L'application détecte automatiquement la connexion
+- En mode hors ligne, utilise les itinéraires pré-enregistrés
+- Affiche une notification "Mode hors ligne"
+
+### 5.4 Informations des Régions
 
 Cliquer sur un marqueur de la carte pour voir :
 - Nom de la capitale
@@ -189,9 +219,9 @@ Cliquer sur un marqueur de la carte pour voir :
 |----------|--------|-----------|------------|
 | `/` | GET | - | Page principale |
 | `/api/regions` | GET | - | Liste des 14 régions |
-| `/api/dijkstra` | GET | start, destination | Plus court chemin |
-| `/api/bellman` | GET | start, destination | Plus court chemin |
-| `/api/tsp` | GET | start | Circuit touristique |
+| `/api/dijkstra` | GET | start, destination, route_type | Plus court chemin |
+| `/api/bellman` | GET | start, destination, route_type | Plus court chemin |
+| `/api/tsp` | GET | start, route_type | Circuit touristique |
 
 ### 6.2 Exemples API
 
@@ -199,8 +229,11 @@ Cliquer sur un marqueur de la carte pour voir :
 # Liste des régions
 curl http://localhost:5000/api/regions
 
-# Itinéraire Dakar → Ziguinchor
-curl "http://localhost:5000/api/dijkstra?start=dakar&destination=ziguinchor"
+# Itinéraire Dakar → Ziguinchor (Route Nationale)
+curl "http://localhost:5000/api/dijkstra?start=dakar&destination=ziguinchor&route_type=national"
+
+# Itinéraire Dakar → Ziguinchor (Autoroute)
+curl "http://localhost:5000/api/dijkstra?start=dakar&destination=ziguinchor&route_type=autoroute"
 
 # Circuit depuis Dakar
 curl "http://localhost:5000/api/tsp?start=dakar"
@@ -219,7 +252,7 @@ def dijkstra(start, end, matrix):
     
     Principe:
     1. Initialiser distances à ∞, sauf départ = 0
-    2. Explorer les nóudd par distance croissante
+    2. Explorer les nœuds par distance croissante
     3. Mettre à jour les distances des voisins
     4. Reconstruire le chemin
     
@@ -237,8 +270,9 @@ def dijkstra(start, end, matrix):
         unvisited.remove(current)
         
         for neighbor in all_regions:
-            if neighbor in unvisited and 0 < matrix[current][neighbor] < 9999:
-                new_dist = dist[current] + matrix[current][neighbor]
+            edge_dist = matrix[current].get(neighbor, 9999)
+            if 0 < edge_dist < 9999:
+                new_dist = dist[current] + edge_dist
                 if new_dist < dist[neighbor]:
                     dist[neighbor] = new_dist
                     prev[neighbor] = current
@@ -315,22 +349,48 @@ def two_opt_optimize(path, matrix):
 
 ---
 
-## 8. Conclusion
+## 8. Fonctionnalités Avancées
+
+### 8.1 Routage Réel (OSRM)
+
+- Utilise OSRM (Open Source Routing Machine) pour les itinéraires réels
+- Routes avec virages et chemins réels (pas de lignes droites)
+- Fallback sur les distances droites en cas d'indisponibilité
+
+### 8.2 Cache et Hors Ligne
+
+- **Service Worker** : Intercepte les requêtes réseau
+- **Tuiles cartographiques** : En cache pour consultation hors ligne
+- **Itinéraires hors ligne** : 25+ itinéraires pré-enregistrés avec points de passage
+
+### 8.3 Interface Moderne
+
+- Thème sombre avec animations
+- Design responsive (mobile/tablet/desktop)
+- Notifications toast pour le feedback utilisateur
+- Icônes et badges pour une meilleurelisibilité
+
+---
+
+## 9. Conclusion
 
 Senegal Trip Planner est une application complète qui répond aux objectifs du projet :
 
 ✓ Affichage des 14 régions sur une carte interactive  
 ✓ Algorithme de Dijkstra pour le plus court chemin  
+✓ Algorithme Bellman-Ford comme alternative  
 ✓ Algorithme TSP pour le circuit touristique  
 ✓ Comparaison Route Nationale vs Autoroute  
+✓ Itinéraires réels (OSRM) et fallbacks  
+✓ Mode hors ligne (PWA)  
+✓ Interface moderne et responsive  
 ✓ Informations utiles pour chaque région  
-✓ Interface adaptée aux mobiles  
 
 Ce projet démontre la maîtrise des algorithmes de graphes et du développement web avec Python/Flask.
 
 ---
 
-## 9. Auteurs et Informations
+## 10. Auteurs et Informations
 
 - **Projet** : Senegal Trip Planner
 - **Auteur** : Mamadou Thiam
