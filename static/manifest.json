@@ -1,12 +1,13 @@
 {
     "name": "Senegal Trip Planner",
     "short_name": "SenegalTrip",
-    "description": "Planificateur d'itinéraire au Sénégal",
+    "description": "Planificateur d'itifinitaire au Senegal avec GPS",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#1a1a2e",
     "theme_color": "#4a90a4",
-    "orientation": "portrait-primary",
+    "orientation": "any",
+    "categories": ["travel", "navigation"],
     "icons": [
         {
             "src": "/static/icon-192.png",

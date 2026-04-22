@@ -40,37 +40,37 @@ const REGION_NAMES = {
 };
 
 const DISTANCES_NATIONAL = {
-    "dakar": {"thies": 46, "fatick": 148, "kaolack": 188},
-    "thies": {"dakar": 46, "diourbel": 77, "kaolack": 116, "fatick": 75, "kaffrine": 90, "louga": 155, "saintlouis": 146},
-    "diourbel": {"thies": 77, "kaolack": 85, "saintlouis": 120, "louga": 90, "kaffrine": 65},
-    "kaolack": {"thies": 116, "diourbel": 85, "fatick": 65, "kaffrine": 58, "sedhiou": 135, "ziguinchor": 205, "tamba": 285, "kolda": 185},
-    "saintlouis": {"diourbel": 120, "louga": 85, "matam": 180},
-    "louga": {"saintlouis": 85, "diourbel": 90, "matam": 110, "thies": 155},
-    "kolda": {"ziguinchor": 105, "sedhiou": 65, "tamba": 145, "kaolack": 185},
-    "ziguinchor": {"kolda": 105, "sedhiou": 85},
-    "sedhiou": {"kaolack": 135, "kolda": 65, "ziguinchor": 85, "fatick": 115},
-    "kaffrine": {"thies": 90, "diourbel": 65, "kaolack": 58, "tamba": 105, "fatick": 78},
-    "kedougou": {"tamba": 185, "kolda": 305},
-    "matam": {"saintlouis": 180, "louga": 110, "tamba": 160},
+    "dakar": {"thies": 46, "fatick": 148, "kaolack": 188, "sedhiou": 280, "kolda": 300, "ziguinchor": 350, "kedougou": 450, "matam": 323, "diourbel": 132, "saintlouis": 179, "louga": 221, "kaffrine": 231, "tamba": 241},
+    "thies": {"dakar": 46, "diourbel": 77, "kaolack": 116, "fatick": 75, "kaffrine": 90, "louga": 155, "saintlouis": 146, "sedhiou": 200, "kolda": 220, "ziguinchor": 250, "kedougou": 350},
+    "diourbel": {"thies": 77, "kaolack": 85, "saintlouis": 120, "louga": 90, "kaffrine": 65, "sedhiou": 180, "kolda": 200, "ziguinchor": 230, "kedougou": 320, "matam": 200, "tamba": 296},
+    "kaolack": {"thies": 116, "diourbel": 85, "fatick": 65, "kaffrine": 58, "sedhiou": 135, "ziguinchor": 205, "tamba": 285, "kolda": 185, "louga": 171, "saintlouis": 214},
+    "saintlouis": {"diourbel": 120, "louga": 85, "matam": 180, "fatick": 194, "kaolack": 214, "kaffrine": 244},
+    "louga": {"saintlouis": 85, "diourbel": 90, "matam": 110, "thies": 155, "fatick": 152, "kaffrine": 172, "tamba": 296},
+    "kolda": {"ziguinchor": 105, "sedhiou": 65, "tamba": 145, "kaolack": 185, "kaffrine": 144, "fatick": 202},
+    "ziguinchor": {"kolda": 105, "sedhiou": 85, "kaffrine": 192, "fatick": 195},
+    "sedhiou": {"kaolack": 135, "kolda": 65, "ziguinchor": 85, "fatick": 115, "kaffrine": 155, "tamba": 201},
+    "kaffrine": {"thies": 90, "diourbel": 65, "kaolack": 58, "tamba": 105, "fatick": 78, "matam": 289},
+    "kedougou": {"tamba": 185, "kolda": 305, "matam": 280},
+    "matam": {"saintlouis": 180, "louga": 110, "tamba": 160, "kedougou": 280},
     "tamba": {"kaffrine": 105, "matam": 160, "kolda": 145, "kedougou": 185, "kaolack": 285},
-    "fatick": {"kaolack": 65, "kaffrine": 78, "sedhiou": 115, "thies": 75}
+    "fatick": {"kaolack": 65, "kaffrine": 78, "sedhiou": 115, "thies": 75, "louga": 152, "ziguinchor": 195, "kolda": 202}
 };
 
 const DISTANCES_AUTOROUTE = {
-    "dakar": {"thies": 42, "fatick": 140, "kaolack": 175},
-    "thies": {"dakar": 42, "diourbel": 72, "kaolack": 110, "fatick": 68, "kaffrine": 85, "louga": 148, "saintlouis": 140},
-    "diourbel": {"thies": 72, "kaolack": 80, "saintlouis": 115, "louga": 85, "kaffrine": 60},
-    "kaolack": {"thies": 110, "diourbel": 80, "fatick": 58, "kaffrine": 55, "sedhiou": 125, "ziguinchor": 192, "tamba": 268, "kolda": 172},
-    "saintlouis": {"diourbel": 115, "louga": 78, "matam": 170},
-    "louga": {"saintlouis": 78, "diourbel": 85, "matam": 105, "thies": 148},
-    "kolda": {"ziguinchor": 98, "sedhiou": 58, "tamba": 135, "kaolack": 172},
-    "ziguinchor": {"kolda": 98, "sedhiou": 75},
-    "sedhiou": {"kaolack": 125, "kolda": 58, "ziguinchor": 75, "fatick": 105},
-    "kaffrine": {"thies": 85, "diourbel": 60, "kaolack": 55, "tamba": 95, "fatick": 70},
-    "kedougou": {"tamba": 172, "kolda": 288},
-    "matam": {"saintlouis": 170, "louga": 105, "tamba": 150},
+    "dakar": {"thies": 42, "fatick": 140, "kaolack": 175, "sedhiou": 260, "kolda": 280, "ziguinchor": 320, "kedougou": 420, "matam": 305, "diourbel": 125, "saintlouis": 170, "louga": 210, "kaffrine": 220, "tamba": 228},
+    "thies": {"dakar": 42, "diourbel": 72, "kaolack": 110, "fatick": 68, "kaffrine": 85, "louga": 148, "saintlouis": 140, "sedhiou": 185, "kolda": 205, "ziguinchor": 235, "kedougou": 330},
+    "diourbel": {"thies": 72, "kaolack": 80, "saintlouis": 115, "louga": 85, "kaffrine": 60, "sedhiou": 165, "kolda": 185, "ziguinchor": 215, "kedougou": 300, "matam": 185, "tamba": 280},
+    "kaolack": {"thies": 110, "diourbel": 80, "fatick": 58, "kaffrine": 55, "sedhiou": 125, "ziguinchor": 192, "tamba": 268, "kolda": 172, "louga": 162, "saintlouis": 202},
+    "saintlouis": {"diourbel": 115, "louga": 78, "matam": 170, "fatick": 185, "kaolack": 202, "kaffrine": 232},
+    "louga": {"saintlouis": 78, "diourbel": 85, "matam": 105, "thies": 148, "fatick": 145, "kaffrine": 165, "tamba": 280},
+    "kolda": {"ziguinchor": 98, "sedhiou": 58, "tamba": 135, "kaolack": 172, "kaffrine": 135, "fatick": 192},
+    "ziguinchor": {"kolda": 98, "sedhiou": 75, "kaffrine": 182, "fatick": 185},
+    "sedhiou": {"kaolack": 125, "kolda": 58, "ziguinchor": 75, "fatick": 105, "kaffrine": 145, "tamba": 190},
+    "kaffrine": {"thies": 85, "diourbel": 60, "kaolack": 55, "tamba": 95, "fatick": 70, "matam": 275},
+    "kedougou": {"tamba": 172, "kolda": 288, "matam": 260},
+    "matam": {"saintlouis": 170, "louga": 105, "tamba": 150, "kedougou": 260},
     "tamba": {"kaffrine": 95, "matam": 150, "kolda": 135, "kedougou": 172, "kaolack": 268},
-    "fatick": {"kaolack": 58, "kaffrine": 70, "sedhiou": 105, "thies": 68}
+    "fatick": {"kaolack": 58, "kaffrine": 70, "sedhiou": 105, "thies": 68, "louga": 145, "ziguinchor": 185, "kolda": 192}
 };
 
 function dijkstraClient(start, end, distMatrix) {

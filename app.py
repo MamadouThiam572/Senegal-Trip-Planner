@@ -148,19 +148,50 @@ distances_national["dakar"]["sedhiou"] = 280
 distances_national["dakar"]["kolda"] = 300
 distances_national["dakar"]["ziguinchor"] = 350
 distances_national["dakar"]["kedougou"] = 450
-distances_national["dakar"]["matam"] = 350
+distances_national["dakar"]["matam"] = 323
+distances_national["dakar"]["diourbel"] = 132
+distances_national["dakar"]["saintlouis"] = 179
+distances_national["dakar"]["louga"] = 221
+distances_national["dakar"]["kaffrine"] = 231
+distances_national["dakar"]["tamba"] = 241
 
 distances_national["thies"]["sedhiou"] = 200
 distances_national["thies"]["kolda"] = 220
 distances_national["thies"]["ziguinchor"] = 250
 distances_national["thies"]["kedougou"] = 350
-distances_national["thies"]["matam"] = 280
 
 distances_national["diourbel"]["sedhiou"] = 180
 distances_national["diourbel"]["kolda"] = 200
 distances_national["diourbel"]["ziguinchor"] = 230
 distances_national["diourbel"]["kedougou"] = 320
 distances_national["diourbel"]["matam"] = 200
+distances_national["diourbel"]["tamba"] = 296
+
+distances_national["fatick"]["louga"] = 152
+distances_national["fatick"]["ziguinchor"] = 195
+distances_national["fatick"]["kolda"] = 202
+
+distances_national["kaolack"]["louga"] = 171
+distances_national["kaolack"]["saintlouis"] = 214
+
+distances_national["saintlouis"]["fatick"] = 194
+distances_national["saintlouis"]["kaolack"] = 214
+distances_national["saintlouis"]["kaffrine"] = 244
+
+distances_national["louga"]["fatick"] = 152
+distances_national["louga"]["kaffrine"] = 172
+distances_national["louga"]["tamba"] = 296
+
+distances_national["kaffrine"]["matam"] = 289
+
+distances_national["kolda"]["kaffrine"] = 144
+distances_national["kolda"]["fatick"] = 202
+
+distances_national["ziguinchor"]["kaffrine"] = 192
+distances_national["ziguinchor"]["fatick"] = 195
+
+distances_national["sedhiou"]["kaffrine"] = 155
+distances_national["sedhiou"]["tamba"] = 201
 
 distances_autoroute = {
     "dakar": {"thies": 42, "fatick": 140, "kaolack": 175},
@@ -183,19 +214,50 @@ distances_autoroute["dakar"]["sedhiou"] = 260
 distances_autoroute["dakar"]["kolda"] = 280
 distances_autoroute["dakar"]["ziguinchor"] = 320
 distances_autoroute["dakar"]["kedougou"] = 420
-distances_autoroute["dakar"]["matam"] = 330
+distances_autoroute["dakar"]["matam"] = 305
+distances_autoroute["dakar"]["diourbel"] = 125
+distances_autoroute["dakar"]["saintlouis"] = 170
+distances_autoroute["dakar"]["louga"] = 210
+distances_autoroute["dakar"]["kaffrine"] = 220
+distances_autoroute["dakar"]["tamba"] = 228
 
 distances_autoroute["thies"]["sedhiou"] = 185
 distances_autoroute["thies"]["kolda"] = 205
 distances_autoroute["thies"]["ziguinchor"] = 235
 distances_autoroute["thies"]["kedougou"] = 330
-distances_autoroute["thies"]["matam"] = 265
 
 distances_autoroute["diourbel"]["sedhiou"] = 165
 distances_autoroute["diourbel"]["kolda"] = 185
 distances_autoroute["diourbel"]["ziguinchor"] = 215
 distances_autoroute["diourbel"]["kedougou"] = 300
 distances_autoroute["diourbel"]["matam"] = 185
+distances_autoroute["diourbel"]["tamba"] = 280
+
+distances_autoroute["fatick"]["louga"] = 145
+distances_autoroute["fatick"]["ziguinchor"] = 185
+distances_autoroute["fatick"]["kolda"] = 192
+
+distances_autoroute["kaolack"]["louga"] = 162
+distances_autoroute["kaolack"]["saintlouis"] = 202
+
+distances_autoroute["saintlouis"]["fatick"] = 185
+distances_autoroute["saintlouis"]["kaolack"] = 202
+distances_autoroute["saintlouis"]["kaffrine"] = 232
+
+distances_autoroute["louga"]["fatick"] = 145
+distances_autoroute["louga"]["kaffrine"] = 165
+distances_autoroute["louga"]["tamba"] = 280
+
+distances_autoroute["kaffrine"]["matam"] = 275
+
+distances_autoroute["kolda"]["kaffrine"] = 135
+distances_autoroute["kolda"]["fatick"] = 192
+
+distances_autoroute["ziguinchor"]["kaffrine"] = 182
+distances_autoroute["ziguinchor"]["fatick"] = 185
+
+distances_autoroute["sedhiou"]["kaffrine"] = 145
+distances_autoroute["sedhiou"]["tamba"] = 190
 
 
 def haversine(lat1, lon1, lat2, lon2):

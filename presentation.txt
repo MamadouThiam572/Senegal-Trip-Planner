@@ -1,0 +1,105 @@
+## Structure Recommandée pour la Présentation
+
+Votre présentation devrait durer environ 15-20 minutes et être divisée en 5 parties clés :
+
+---
+
+### Partie 1 : Introduction & Problématique
+
+**Slide 1 : Titre et Présentation**
+*   Titre du Projet : **Senegal Trip Planner**
+*   Votre Nom / Groupe
+*   Nom du Professeur
+
+**Slide 2 : Le Problème (Le "Pourquoi")**
+*   **Le Voyageur de Commerce (TSP) :** Trouver le chemin optimal entre les 14 régions du Sénégal.
+*   **Complexité :** 14 régions = 14! permutations possibles (NP-difficile).
+
+**Slide 3 : Objectif du Projet**
+*   Application web d'optimisation de trajets avec algorithmes de réseaux.
+*   Modélisation : Régions = nœuds, Routes = arêtes pondérées.
+
+---
+
+### Partie 2 : Architecture & Fonctionnalités
+
+**Slide 4 : Fonctionnalités Clés**
+1. Carte interactive (14 régions)
+2. Calcul du chemin le plus court (Dijkstra)
+3. Algorithme de Bellman-Ford
+4. TSP - Visite optimisée des 14 régions
+5. Comparaison route nationale vs autoroute
+6. Informations : tourisme, sécurité, hébergement
+7. Mode offline & géolocalisation GPS
+
+**Slide 5 : La Carte Interactive**
+*   Technologies : **Leaflet.js**, **OpenStreetMap**, **Esri Satellite**
+*   Marqueurs personnalisés par région
+*   Support hors ligne (Service Worker)
+
+---
+
+### Partie 3 : Le Cœur Technique – Les Algorithmes
+
+**Slide 6 : Modélisation du Graphe**
+*   **Sommets :** 14 régions (Dakar, Thiès, Diourbel...)
+*   **Arêtes :** Routes nationales (80 km/h) + Autoroutes (100 km/h)
+*   **Poids :** Distances réelles en km
+
+**Slide 7 : Algorithme de Dijkstra**
+*   **Concept :** Plus court chemin simple (O(V²))
+*   **Application :** Trajet Dakar → destination
+
+**Slide 8 : Algorithme de Bellman-Ford**
+*   **Concept :** Plus court chemin (O(V×E))
+*   **Différence :** Peut gérer les poids négatifs
+
+**Slide 9 : TSP (Two-Phase Algorithm)**
+*   **Phase 1 :** Nearest Neighbor - solution initiale O(n²)
+*   **Phase 2 :** 2-opt - optimisation locale O(n² × itérations)
+*   **Résultat :** Circuit optimal visitant les 14 régions
+
+---
+
+### Partie 4 : Technologies et Implémentation
+
+**Slide 10 : Stack Technologique**
+*   **Frontend :** HTML, CSS, JavaScript, Leaflet.js
+*   **Backend :** Python (Flask)
+*   **Données :** Distances routes nationales + autoroutes
+
+**Slide 11 : Fonctionnalités Avancées**
+*   Mode offline (Service Worker + cache)
+*   Géolocalisation GPS temps réel
+*   Comparaison dynamique nationale/autoroute
+
+---
+
+### Partie 5 : Conclusion & Perspectives
+
+**Slide 12 : Résultats Obtenus**
+*   Dijkstra : trajet optimal court
+*   Bellman-Ford : validation du graphe
+*   TSP : circuit optimal 14 régions
+
+**Slide 13 : Perspectives d'Évolution**
+*   Intégration traffic temps réel
+*   Algorithmes génétiques pour TSP
+*   Application mobile native
+
+**Slide 14 : Questions / Remerciements**
+
+---
+
+## Points Clés à Souligner
+
+### Ce qui distingue votre projet :
+1. **Deux types de routes** (nationales + autoroutes) avec comparaison
+2. **Mode offline** - fonctionne sans internet
+3. **GPS intégré** - localisation temps réel
+4. **Données contextuelles** (sécurité, hébergement, tourisme)
+
+### Questions possibles Q&R :
+- **Pourquoi deux algorithmes pour le même problème ?** → Dijkstra (efficace) vs Bellman-Ford (pédagogique)
+- **Pourquoi 2-opt ?** → TSP NP-difficile ; 2-opt donne bonne solution en temps polynomial
+- **Quelle différence entre NN et 2-opt ?** → NN = solution initiale rapide ; 2-opt = optimisation

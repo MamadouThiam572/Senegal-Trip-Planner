@@ -906,7 +906,8 @@ text-transform: uppercase;
                 <button class="primary" onclick="calculateDijkstra()">⚡ Dijkstra</button>
                 <button onclick="calculateBellman()">🔗 Bellman-Ford</button>
                 <button onclick="calculateTSP()">🌍 TSP</button>
-                <button onclick="resetMap()">🔄 Réinitialiser</button>
+                <button onclick="resetMap()">🔄</button>
+                <button onclick="locateMe()" title="Me localiser" style="background:var(--accent);">📍</button>
             </div>
             <div class="legend">
                 <div class="legend-item">
@@ -1203,12 +1204,7 @@ text-transform: uppercase;
             document.getElementById('infoCard').style.display = 'none';
 
             window.currentRouteData = data;
-            map.eachLayer(function(layer) {
-                if (layer instanceof L.Polyline) {
-                    map.removeLayer(layer);
-                }
-            });
-            routeLayers = {};
+            console.log('displayResults, calling drawRoutes');
             drawRoutes(nat.path, aut.path);
         }
 
@@ -1241,6 +1237,8 @@ text-transform: uppercase;
         window.currentRouteData = null;
 
         async function drawRoutes(nationalPath, autoroutePath) {
+            console.log('drawRoutes called', nationalPath, autoroutePath);
+            
             map.eachLayer(function(layer) {
                 if (layer instanceof L.Polyline) {
                     map.removeLayer(layer);
@@ -1253,48 +1251,62 @@ text-transform: uppercase;
         }
 
 async function drawSingleRoute(path, color, key) {
+            console.log('drawSingleRoute:', path, key);
             if (!path || path.length < 2) return;
             
             const validPath = path.filter(k => regions[k]);
             if (validPath.length < 2) return;
 
             const allCoords = [];
-            let useOnline = navigator.onLine;
+            const isOnline = navigator.onLine;
+            console.log('Online:', isOnline);
             
             for (let i = 0; i < validPath.length - 1; i++) {
                 const fromKey = validPath[i];
                 const toKey = validPath[i+1];
+                console.log('Route:', fromKey, '->', toKey);
                 
                 if (!regions[fromKey] || !regions[toKey]) continue;
                 
-                const from = [regions[fromKey].lat, regions[fromKey].lng];
-                const to = [regions[toKey].lat, regions[toKey].lng];
-                
-                if (useOnline) {
+                // Try OSRM if online
+                if (isOnline) {
                     try {
-                        const coords = `${from[1]},${from[0]};${to[1]},${to[0]}`;
+                        const from = regions[fromKey];
+                        const to = regions[toKey];
+                        console.log('Trying OSRM for', fromKey, '->', toKey);
+                        const coords = `${from.lng},${from.lat};${to.lng},${to.lat}`;
                         const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
                         const res = await fetch(url);
                         const data = await res.json();
+                        console.log('OSRM response:', data.code);
                         if (data.code === 'Ok' && data.routes && data.routes[0]) {
                             const geojson = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
                             allCoords.push(...geojson);
+                            console.log('OSRM success!');
                             continue;
                         }
                     } catch (e) {
-                        useOnline = false;
+                        console.log('OSRM error:', e.message);
                     }
                 }
                 
+                // Fallback to offline routes
+                console.log('Using offline for', fromKey, '->', toKey);
                 const offlineRoute = getOfflineRoute(fromKey, toKey, key);
                 if (offlineRoute) {
                     allCoords.push(...offlineRoute);
                 } else {
+                    const from = [regions[fromKey].lat, regions[fromKey].lng];
+                    const to = [regions[toKey].lat, regions[toKey].lng];
                     allCoords.push(from, to);
                 }
             }
             
-            routeLayers[key] = L.polyline(allCoords, { 
+            console.log('Total coords:', allCoords.length);
+            
+            if (allCoords.length === 0) return;
+
+            routeLayers[key] = L.polyline(allCoords, {
                 color: color, 
                 weight: 5, 
                 opacity: 0.9,
@@ -1351,6 +1363,57 @@ async function drawSingleRoute(path, color, key) {
             document.getElementById('results').classList.remove('active');
             document.getElementById('infoCard').style.display = 'block';
             map.setView([14.4974, -14.4524], 7);
+        }
+
+        function locateMe() {
+            if (!navigator.geolocation) {
+                alert('GPS non supporté par ce navigateur');
+                return;
+            }
+            alert('Recherche GPS...');
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    alert('Position: ' + lat.toFixed(4) + ', ' + lng.toFixed(4) + ' (precision: ' + Math.round(pos.coords.accuracy) + 'm)');
+                    
+                    if (window.userMarker) map.removeLayer(window.userMarker);
+                    
+                    window.userMarker = L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            className: 'user-marker',
+                            html: '<div style="background:#22c55e;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-size:12px;">📍</div>',
+                            iconSize: [24, 24],
+                            iconAnchor: [12, 12],
+                        })
+                    }).addTo(map).bindPopup('Votre position');
+                    
+                    map.setView([lat, lng], 12);
+                    
+                    // Trouver la region la plus proche (Haversine)
+                    let minDist = Infinity, nearest = null;
+                    Object.keys(regions).forEach(k => {
+                        const r = regions[k];
+                        const R = 6371;
+                        const dLat = (r.lat - lat) * Math.PI / 180;
+                        const dLon = (r.lng - lng) * Math.PI / 180;
+                        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + 
+                                 Math.cos(lat * Math.PI / 180) * Math.cos(r.lat * Math.PI / 180) * 
+                                 Math.sin(dLon/2) * Math.sin(dLon/2);
+                        const d = R * 2 * Math.asin(Math.sqrt(a));
+                        if (d < minDist) { minDist = d; nearest = k; }
+                    });
+                    
+                    if (nearest) {
+                        document.getElementById('startSelect').value = nearest;
+                        alert('Plus proche: ' + regions[nearest].name + ' (' + Math.round(minDist) + ' km)');
+                    }
+                },
+                function(err) {
+                    alert('Erreur GPS: ' + err.message);
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+            );
         }
 
         window.onload = initMap;
