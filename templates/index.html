@@ -1320,6 +1320,25 @@ text-transform: uppercase;
             let natDisplayPath = isTSP ? nat.path.slice(0, -1) : [...nat.path];
             let autDisplayPath = isTSP ? aut.path.slice(0, -1) : [...aut.path];
             
+            // Fonction pour générer la liste des étapes avec infos routes
+            function buildRouteList(path, roads, isNational) {
+                let html = '';
+                for (let i = 0; i < path.length; i++) {
+                    let roadInfo = '';
+                    let distance = '';
+                    if (roads && roads[i - 1] && path[i]) {
+                        const r = roads[i - 1];
+                        distance = r.distance ? ` (${r.distance} km)` : '';
+                        roadInfo = r.road ? ` <span style="color:var(--${isNational ? 'national' : 'autoroute'});font-size:0.75rem;font-weight:500;">${r.road}${distance}</span>` : '';
+                    }
+                    html += `<li onclick="showRegionDetails('${path[i]}')"><span class="num">${i+1}</span><span class="region-name">${regions[path[i]].name}</span>${roadInfo}<span class="region-arrow">→</span></li>`;
+                }
+                return html;
+            }
+            
+            const natRoads = nat.roads || [];
+            const autRoads = aut.roads || [];
+            
             const subTitle = isTSP 
                 ? `Parcourir les ${nat.path.length - 1} régions en partant de ${regions[nat.path[0]].name}`
                 : `<strong>Départ:</strong> ${regions[nat.path[0]].name} → <strong>Arrivée:</strong> ${regions[nat.path[nat.path.length-1]].name}`;
@@ -1352,7 +1371,7 @@ text-transform: uppercase;
                         ${isTSP ? `<div class="stat"><span class="stat-label">Étapes</span><span class="stat-value">${nat.path.length - 1}</span></div>` : ''}
                     </div>
                     <ul class="route-list">
-                        ${natDisplayPath.map((key, i) => `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span><span class="region-name">${regions[key].name}</span><span class="region-arrow">→</span></li>`).join('')}
+                        ${buildRouteList(natDisplayPath, natRoads, true)}
                     </ul>
                 </div>
 
@@ -1367,7 +1386,7 @@ text-transform: uppercase;
                         ${isTSP ? `<div class="stat"><span class="stat-label">Étapes</span><span class="stat-value">${aut.path.length - 1}</span></div>` : ''}
                     </div>
                     <ul class="route-list">
-                        ${autDisplayPath.map((key, i) => `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span><span class="region-name">${regions[key].name}</span><span class="region-arrow">→</span></li>`).join('')}
+                        ${buildRouteList(autDisplayPath, autRoads, false)}
                     </ul>
                 </div>
 
