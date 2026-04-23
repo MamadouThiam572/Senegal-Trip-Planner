@@ -1012,7 +1012,7 @@ text-transform: uppercase;
                     <div class="route-section national active">
                         <div class="route-header">
                             <h3>🛣️ Route Nationale</h3>
-                            <span class="route-badge">80 km/h</span>
+                            <span class="route-badge">60 km/h</span>
                         </div>
                         <div class="route-stats">
                             <div class="stat"><span class="stat-label">Distance</span><span class="stat-value" id="nationalDist">0</span> km</div>
@@ -1315,20 +1315,10 @@ text-transform: uppercase;
             const isTSP = nat.path.length > 2 && nat.path[0] === nat.path[nat.path.length - 1];
             const title = isTSP ? '🌍 Circuit Tourismique (TSP)' : '🛣️ Itinéraire Calculé';
             
-            // Construction du chemin complet avec destination
-            const natFullPath = nat.path.slice(0, -1); // Enlève le retour au début (TSP)
-            const autFullPath = aut.path.slice(0, -1);
-            
-            // Pour Dijkstra/Bellman: ajouter la destination si pas déjà présente
-            let natDisplayPath = [...natFullPath];
-            let autDisplayPath = [...autFullPath];
-            if (!isTSP && nat.path.length === 2) {
-                // Route directe: ajouter la destination
-                natDisplayPath.push(nat.path[1]);
-            }
-            if (!isTSP && aut.path.length === 2) {
-                autDisplayPath.push(aut.path[1]);
-            }
+            // TSP: enlève le retour au point de départ (dernier élément = même que premier)
+            // Dijkstra/Bellman: garde tout le chemin (incluant destination finale)
+            let natDisplayPath = isTSP ? nat.path.slice(0, -1) : [...nat.path];
+            let autDisplayPath = isTSP ? aut.path.slice(0, -1) : [...aut.path];
             
             const subTitle = isTSP 
                 ? `Parcourir les ${nat.path.length - 1} régions en partant de ${regions[nat.path[0]].name}`
@@ -1354,7 +1344,7 @@ text-transform: uppercase;
                 <div class="route-section national active">
                     <div class="route-header">
                         <h3>🛣️ Route Nationale</h3>
-                        <span class="route-badge">80 km/h</span>
+                        <span class="route-badge">60 km/h</span>
                     </div>
                     <div class="route-stats">
                         <div class="stat"><span class="stat-label">Distance</span><span class="stat-value">${nat.distance}</span> km</div>

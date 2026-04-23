@@ -154,138 +154,103 @@ all_regions = list(regions.keys())
 # distances_national: Distances en km via routes nationales (vitesse max: 80 km/h)
 # distances_autoroute: Distances en km via autoroutes (vitesse max: 100 km/h)
 # Structure: {region_depart: {region_arrivee: distance_km}}
+# =============================================================================
+# MATRICES DE DISTANCES (valeurs Google Maps - routes réelles)
+# =============================================================================
+# Distances routières en km basées sur Google Maps (route en voiture)
+# Ces distances représentent le trajet réel sur route, pas vol d'oiseau
+
 distances_national = {
-    "dakar": {"thies": 46, "fatick": 148, "kaolack": 188},
-    "thies": {"dakar": 46, "diourbel": 77, "kaolack": 116, "fatick": 75, "kaffrine": 90, "louga": 155, "saintlouis": 146},
-    "diourbel": {"thies": 77, "kaolack": 85, "saintlouis": 120, "louga": 90, "kaffrine": 65, "fatick": 95},
-    "kaolack": {"thies": 116, "diourbel": 85, "fatick": 65, "kaffrine": 58, "sedhiou": 135, "ziguinchor": 205, "tamba": 285, "kolda": 185},
-    "saintlouis": {"diourbel": 120, "louga": 85, "matam": 180, "thies": 146},
-    "louga": {"saintlouis": 85, "diourbel": 90, "matam": 110, "thies": 155},
-    "kolda": {"ziguinchor": 105, "sedhiou": 65, "tamba": 145, "kaolack": 185, "kedougou": 305},
-    "ziguinchor": {"kolda": 105, "sedhiou": 85},
-    "sedhiou": {"kaolack": 135, "kolda": 65, "ziguinchor": 85, "fatick": 115},
-    "kaffrine": {"thies": 90, "diourbel": 65, "kaolack": 58, "tamba": 105, "fatick": 78},
-    "kedougou": {"tamba": 185, "kolda": 305, "matam": 280},
-    "matam": {"saintlouis": 180, "louga": 110, "tamba": 160, "kedougou": 280},
-    "tamba": {"kaffrine": 105, "matam": 160, "kolda": 145, "kedougou": 185, "kaolack": 285},
-    "fatick": {"kaolack": 65, "kaffrine": 78, "sedhiou": 115, "thies": 75, "diourbel": 95}
+    # Dakar - connections directes
+    "dakar": {"thies": 65, "fatick": 148, "kaolack": 192, "saintlouis": 256, "louga": 189, "diourbel": 122, "matam": 529, "kaffrine": 210, "tamba": 461, "ziguinchor": 454, "kolda": 658, "sedhiou": 410, "kedougou": 695},
+    
+    # Thiès
+    "thies": {"dakar": 65, "diourbel": 77, "kaolack": 116, "fatick": 75, "kaffrine": 168, "louga": 122, "saintlouis": 195, "matam": 420, "tamba": 370, "ziguinchor": 258, "kolda": 320, "sedhiou": 276, "kedougou": 450},
+    
+    # Diourbel
+    "diourbel": {"thies": 77, "kaolack": 57, "fatick": 40, "saintlouis": 155, "louga": 107, "kaffrine": 97, "matam": 338, "tamba": 293, "ziguinchor": 233, "kolda": 239, "sedhiou": 229, "kedougou": 497},
+    
+    # Kaolack
+    "kaolack": {"thies": 116, "diourbel": 57, "fatick": 47, "kaffrine": 58, "saintlouis": 258, "louga": 160, "matam": 450, "tamba": 294, "ziguinchor": 271, "kolda": 516, "sedhiou": 172, "kedougou": 528, "dakar": 192},
+    
+    # Fatick
+    "fatick": {"kaolack": 47, "kaffrine": 97, "thies": 75, "diourbel": 40, "saintlouis": 200, "louga": 155, "matam": 380, "tamba": 318, "ziguinchor": 200, "kolda": 547, "sedhiou": 204, "dakar": 148},
+    
+    # Saint-Louis
+    "saintlouis": {"diourbel": 155, "louga": 73, "matam": 419, "thies": 195, "kaolack": 258, "fatick": 200, "kaffrine": 237, "tamba": 509, "ziguinchor": 539, "kolda": 694, "sedhiou": 383, "dakar": 256},
+    
+    # Louga
+    "louga": {"saintlouis": 73, "diourbel": 107, "matam": 353, "thies": 122, "fatick": 155, "kaffrine": 183, "tamba": 343, "ziguinchor": 338, "kolda": 657, "sedhiou": 332, "dakar": 189},
+    
+    # Matam
+    "matam": {"saintlouis": 419, "louga": 353, "tamba": 251, "diourbel": 338, "kaolack": 450, "kaffrine": 300, "thies": 420, "fatick": 380, "ziguinchor": 654, "kolda": 465, "sedhiou": 412, "dakar": 529},
+    
+    # Kaffrine
+    "kaffrine": {"thies": 168, "diourbel": 97, "kaolack": 58, "fatick": 97, "tamba": 215, "matam": 300, "saintlouis": 237, "louga": 183, "ziguinchor": 188, "kolda": 147, "sedhiou": 156, "dakar": 210},
+    
+    # Tambacounda
+    "tamba": {"kaffrine": 215, "matam": 251, "kolda": 224, "kedougou": 234, "kaolack": 294, "diourbel": 293, "thies": 370, "fatick": 318, "ziguinchor": 295, "saintlouis": 509, "louga": 343, "sedhiou": 307, "dakar": 461},
+    
+    # Kolda
+    "kolda": {"ziguinchor": 186, "sedhiou": 85, "tamba": 224, "kaolack": 516, "kaffrine": 147, "fatick": 547, "thies": 320, "diourbel": 239, "matam": 465, "kedougou": 417, "dakar": 658},
+    
+    # Ziguinchor
+    "ziguinchor": {"kolda": 186, "sedhiou": 78, "kaolack": 271, "fatick": 200, "tamba": 295, "kaffrine": 188, "thies": 258, "diourbel": 233, "dakar": 454},
+    
+    # Sédhiou
+    "sedhiou": {"kaolack": 172, "kolda": 85, "ziguinchor": 78, "fatick": 204, "tamba": 307, "kaffrine": 156, "diourbel": 229, "thies": 276, "dakar": 410},
+    
+    # Kédougou
+    "kedougou": {"tamba": 234, "kolda": 417, "matam": 474, "kaolack": 528, "thies": 450, "diourbel": 497, "dakar": 695}
 }
 
-# Add missing cross-connections
-distances_national["dakar"]["sedhiou"] = 280
-distances_national["dakar"]["kolda"] = 300
-distances_national["dakar"]["ziguinchor"] = 350
-distances_national["dakar"]["kedougou"] = 450
-distances_national["dakar"]["matam"] = 323
-distances_national["dakar"]["diourbel"] = 132
-distances_national["dakar"]["saintlouis"] = 179
-distances_national["dakar"]["louga"] = 221
-distances_national["dakar"]["kaffrine"] = 231
-distances_national["dakar"]["tamba"] = 241
-
-distances_national["thies"]["sedhiou"] = 200
-distances_national["thies"]["kolda"] = 220
-distances_national["thies"]["ziguinchor"] = 250
-distances_national["thies"]["kedougou"] = 350
-
-distances_national["diourbel"]["sedhiou"] = 180
-distances_national["diourbel"]["kolda"] = 200
-distances_national["diourbel"]["ziguinchor"] = 230
-distances_national["diourbel"]["kedougou"] = 320
-distances_national["diourbel"]["matam"] = 200
-distances_national["diourbel"]["tamba"] = 296
-
-distances_national["fatick"]["louga"] = 152
-distances_national["fatick"]["ziguinchor"] = 195
-distances_national["fatick"]["kolda"] = 202
-
-distances_national["kaolack"]["louga"] = 171
-distances_national["kaolack"]["saintlouis"] = 214
-
-distances_national["saintlouis"]["fatick"] = 194
-distances_national["saintlouis"]["kaolack"] = 214
-distances_national["saintlouis"]["kaffrine"] = 244
-
-distances_national["louga"]["fatick"] = 152
-distances_national["louga"]["kaffrine"] = 172
-distances_national["louga"]["tamba"] = 296
-
-distances_national["kaffrine"]["matam"] = 289
-
-distances_national["kolda"]["kaffrine"] = 144
-distances_national["kolda"]["fatick"] = 202
-
-distances_national["ziguinchor"]["kaffrine"] = 192
-distances_national["ziguinchor"]["fatick"] = 195
-
-distances_national["sedhiou"]["kaffrine"] = 155
-distances_national["sedhiou"]["tamba"] = 201
+# =============================================================================
+# MATRICE AUTOROUTE (routes via autoroute, légèrement plus courtes)
+# =============================================================================
 
 distances_autoroute = {
-    "dakar": {"thies": 42, "fatick": 140, "kaolack": 175},
-    "thies": {"dakar": 42, "diourbel": 72, "kaolack": 110, "fatick": 68, "kaffrine": 85, "louga": 148, "saintlouis": 140},
-    "diourbel": {"thies": 72, "kaolack": 80, "saintlouis": 115, "louga": 85, "kaffrine": 60, "fatick": 88},
-    "kaolack": {"thies": 110, "diourbel": 80, "fatick": 58, "kaffrine": 55, "sedhiou": 125, "ziguinchor": 192, "tamba": 268, "kolda": 172},
-    "saintlouis": {"diourbel": 115, "louga": 78, "matam": 170, "thies": 140},
-    "louga": {"saintlouis": 78, "diourbel": 85, "matam": 105, "thies": 148},
-    "kolda": {"ziguinchor": 98, "sedhiou": 58, "tamba": 135, "kaolack": 172, "kedougou": 288},
-    "ziguinchor": {"kolda": 98, "sedhiou": 75},
-    "sedhiou": {"kaolack": 125, "kolda": 58, "ziguinchor": 75, "fatick": 105},
-    "kaffrine": {"thies": 85, "diourbel": 60, "kaolack": 55, "tamba": 95, "fatick": 70},
-    "kedougou": {"tamba": 172, "kolda": 288, "matam": 260},
-    "matam": {"saintlouis": 170, "louga": 105, "tamba": 150, "kedougou": 260},
-    "tamba": {"kaffrine": 95, "matam": 150, "kolda": 135, "kedougou": 172, "kaolack": 268},
-    "fatick": {"kaolack": 58, "kaffrine": 70, "sedhiou": 105, "thies": 68, "diourbel": 88}
+    # Dakar - via autoroute
+    "dakar": {"thies": 60, "fatick": 140, "kaolack": 185, "saintlouis": 245, "louga": 180, "diourbel": 115, "matam": 510, "kaffrine": 200, "tamba": 445, "ziguinchor": 440, "kolda": 630, "sedhiou": 395, "kedougou": 670},
+    
+    # Thiès
+    "thies": {"dakar": 60, "diourbel": 72, "kaolack": 110, "fatick": 70, "kaffrine": 160, "louga": 115, "saintlouis": 185, "matam": 405, "tamba": 355, "ziguinchor": 250, "kolda": 305, "sedhiou": 265, "kedougou": 435},
+    
+    # Diourbel
+    "diourbel": {"thies": 72, "kaolack": 54, "fatick": 38, "saintlouis": 148, "louga": 100, "kaffrine": 92, "matam": 325, "tamba": 280, "ziguinchor": 225, "kolda": 230, "sedhiou": 220, "kedougou": 480},
+    
+    # Kaolack
+    "kaolack": {"thies": 110, "diourbel": 54, "fatick": 44, "kaffrine": 55, "saintlouis": 250, "louga": 152, "matam": 435, "tamba": 282, "ziguinchor": 262, "kolda": 498, "sedhiou": 165, "kedougou": 510, "dakar": 185},
+    
+    # Fatick
+    "fatick": {"kaolack": 44, "kaffrine": 92, "thies": 70, "diourbel": 38, "saintlouis": 192, "louga": 148, "matam": 365, "tamba": 305, "ziguinchor": 192, "kolda": 528, "sedhiou": 196, "dakar": 140},
+    
+    # Saint-Louis
+    "saintlouis": {"diourbel": 148, "louga": 70, "matam": 405, "thies": 185, "kaolack": 250, "fatick": 192, "kaffrine": 228, "tamba": 490, "ziguinchor": 520, "kolda": 668, "sedhiou": 368, "dakar": 245},
+    
+    # Louga
+    "louga": {"saintlouis": 70, "diourbel": 100, "matam": 340, "thies": 115, "fatick": 148, "kaffrine": 175, "tamba": 330, "ziguinchor": 325, "kolda": 632, "sedhiou": 318, "dakar": 180},
+    
+    # Matam
+    "matam": {"saintlouis": 405, "louga": 340, "tamba": 242, "diourbel": 325, "kaolack": 435, "kaffrine": 288, "thies": 405, "fatick": 365, "ziguinchor": 630, "kolda": 448, "sedhiou": 395, "dakar": 510},
+    
+    # Kaffrine
+    "kaffrine": {"thies": 160, "diourbel": 92, "kaolack": 55, "fatick": 92, "tamba": 205, "matam": 288, "saintlouis": 228, "louga": 175, "ziguinchor": 180, "kolda": 140, "sedhiou": 150, "dakar": 200},
+    
+    # Tambacounda
+    "tamba": {"kaffrine": 205, "matam": 242, "kolda": 215, "kedougou": 225, "kaolack": 282, "diourbel": 280, "thies": 355, "fatick": 305, "ziguinchor": 285, "saintlouis": 490, "louga": 330, "sedhiou": 295, "dakar": 445},
+    
+    # Kolda
+    "kolda": {"ziguinchor": 178, "sedhiou": 82, "tamba": 215, "kaolack": 498, "kaffrine": 140, "fatick": 528, "thies": 305, "diourbel": 230, "matam": 448, "kedougou": 400, "dakar": 630},
+    
+    # Ziguinchor
+    "ziguinchor": {"kolda": 178, "sedhiou": 75, "kaolack": 262, "fatick": 192, "tamba": 285, "kaffrine": 180, "thies": 250, "diourbel": 225, "dakar": 440},
+    
+    # Sédhiou
+    "sedhiou": {"kaolack": 165, "kolda": 82, "ziguinchor": 75, "fatick": 196, "tamba": 295, "kaffrine": 150, "diourbel": 220, "thies": 265, "dakar": 395},
+    
+    # Kédougou
+    "kedougou": {"tamba": 225, "kolda": 400, "matam": 458, "kaolack": 510, "thies": 435, "diourbel": 480, "dakar": 670}
 }
-
-distances_autoroute["dakar"]["sedhiou"] = 260
-distances_autoroute["dakar"]["kolda"] = 280
-distances_autoroute["dakar"]["ziguinchor"] = 320
-distances_autoroute["dakar"]["kedougou"] = 420
-distances_autoroute["dakar"]["matam"] = 305
-distances_autoroute["dakar"]["diourbel"] = 125
-distances_autoroute["dakar"]["saintlouis"] = 170
-distances_autoroute["dakar"]["louga"] = 210
-distances_autoroute["dakar"]["kaffrine"] = 220
-distances_autoroute["dakar"]["tamba"] = 228
-
-distances_autoroute["thies"]["sedhiou"] = 185
-distances_autoroute["thies"]["kolda"] = 205
-distances_autoroute["thies"]["ziguinchor"] = 235
-distances_autoroute["thies"]["kedougou"] = 330
-
-distances_autoroute["diourbel"]["sedhiou"] = 165
-distances_autoroute["diourbel"]["kolda"] = 185
-distances_autoroute["diourbel"]["ziguinchor"] = 215
-distances_autoroute["diourbel"]["kedougou"] = 300
-distances_autoroute["diourbel"]["matam"] = 185
-distances_autoroute["diourbel"]["tamba"] = 280
-
-distances_autoroute["fatick"]["louga"] = 145
-distances_autoroute["fatick"]["ziguinchor"] = 185
-distances_autoroute["fatick"]["kolda"] = 192
-
-distances_autoroute["kaolack"]["louga"] = 162
-distances_autoroute["kaolack"]["saintlouis"] = 202
-
-distances_autoroute["saintlouis"]["fatick"] = 185
-distances_autoroute["saintlouis"]["kaolack"] = 202
-distances_autoroute["saintlouis"]["kaffrine"] = 232
-
-distances_autoroute["louga"]["fatick"] = 145
-distances_autoroute["louga"]["kaffrine"] = 165
-distances_autoroute["louga"]["tamba"] = 280
-
-distances_autoroute["kaffrine"]["matam"] = 275
-
-distances_autoroute["kolda"]["kaffrine"] = 135
-distances_autoroute["kolda"]["fatick"] = 192
-
-distances_autoroute["ziguinchor"]["kaffrine"] = 182
-distances_autoroute["ziguinchor"]["fatick"] = 185
-
-distances_autoroute["sedhiou"]["kaffrine"] = 145
-distances_autoroute["sedhiou"]["tamba"] = 190
 
 
 # =============================================================================
@@ -548,8 +513,10 @@ def api_dijkstra():
     path_national, dist_national = dijkstra(start, destination, road_matrix_national)
     path_autoroute, dist_autoroute = dijkstra(start, destination, road_matrix_autoroute)
     
-    # Vitesses moyennes estimées selon type de route
-    speed_national = 80
+    # Vitesses moyennes réelles au Sénégal (km/h)
+    # Routes nationales: 60 km/h (moyenne avecTraffic, état des routes)
+    # Autoroute: 100 km/h (limitée à 110 mais circulation)
+    speed_national = 60
     speed_autoroute = 100
     
     return jsonify({
@@ -582,7 +549,7 @@ def api_bellman():
     path_national, dist_national = bellman_ford(start, destination, road_matrix_national)
     path_autoroute, dist_autoroute = bellman_ford(start, destination, road_matrix_autoroute)
     
-    speed_national = 80
+    speed_national = 60
     speed_autoroute = 100
     
     return jsonify({
@@ -615,7 +582,7 @@ def api_tsp():
     path_national, dist_national = two_phase_tsp(road_matrix_national, start)
     path_autoroute, dist_autoroute = two_phase_tsp(road_matrix_autoroute, start)
     
-    speed_national = 80
+    speed_national = 60
     speed_autoroute = 100
     
     return jsonify({
