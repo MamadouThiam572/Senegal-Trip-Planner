@@ -11,7 +11,17 @@
     <link rel="apple-touch-icon" href="/static/icon-192.png">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Feuille de styles CSS -->
     <style>
+        /* =============================================================================
+           VARIABLES CSS (DESIGN TOKENS)
+           =============================================================================
+           Palette de couleurs thème sombre:
+           - bg-dark: Fond principal
+           - accent: Couleur d'accent principale (cyan)
+           - national: Bleu pour routes nationales
+           - autoroute: Orange pour autoroutes
+           */
         :root {
             --bg-dark: #0f0f1a;
             --bg-card: #1a1a2e;
@@ -61,8 +71,16 @@
             z-index: -1;
         }
 
+        /* =============================================================================
+           LAYOUT PRINCIPAL
+           ============================================================================= */
         .container { max-width: 1400px; margin: 0 auto; }
 
+        /* =============================================================================
+           HEADER
+           =============================================================================
+           En-tête avec logo animé, titre et statistiques
+           */
         header {
             text-align: center;
             margin-bottom: 30px;
@@ -178,6 +196,11 @@
             border: 1px solid var(--border);
         }
 
+        /* =============================================================================
+           NOTIFICATIONS ET ERREURS
+           =============================================================================
+           Toast messages + bannière offline + message d'erreur
+           */
         .offline-banner { 
             display: none; 
             background: linear-gradient(135deg, var(--autoroute), #ea580c); 
@@ -386,9 +409,19 @@ text-transform: uppercase;
         .route-section { display: none; }
         .route-section.active { display: block; }
 
+        /* =============================================================================
+           CARTE ET SIDEBAR
+           =============================================================================
+           Grille: carte à gauche, sidebar résultats à droite
+           */
         .main-content { display: grid; grid-template-columns: 1fr 380px; gap: 25px; }
         @media (max-width: 1024px) { .main-content { grid-template-columns: 1fr; } }
 
+        /* =============================================================================
+           CARTE LEAFLET
+           =============================================================================
+           Conteneur pour la carte interactive OpenStreetMap
+           */
         .map-container {
             background: var(--bg-card);
             border-radius: 16px;
@@ -697,6 +730,11 @@ text-transform: uppercase;
             100% { width: 100%; }
         }
 
+        /* =============================================================================
+           ANIMATIONS CSS
+           =============================================================================
+           pulse, float, spin, fadeIn, shake, slideIn
+           */
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes shake {
@@ -727,6 +765,11 @@ text-transform: uppercase;
             .route-list li { font-size: 0.8rem; padding: 10px 12px; }
         }
 
+        /* =============================================================================
+           PERSONNALISATION LEAFLET
+           =============================================================================
+           Thème sombre pour la carte et ses contrôles
+           */
         .leaflet-popup-content-wrapper {
             background: transparent;
             border-radius: 12px;
@@ -797,6 +840,11 @@ text-transform: uppercase;
             color: white;
         }
 
+        /* =============================================================================
+           FOOTER
+           =============================================================================
+           Pied de page avec logo, liens et copyright
+           */
         .footer {
             margin-top: 40px;
             background: var(--bg-card);
@@ -874,9 +922,17 @@ text-transform: uppercase;
         }
     </style>
 </head>
+<!-- =============================================================================
+     CORPS DE LA PAGE
+     ============================================================================= -->
 <body>
     <div class="container">
         <div class="offline-banner" id="offlineBanner">Mode hors ligne - Les tuiles et routes sont en cache</div>
+        <!-- =============================================================================
+         EN-TÊTE (HEADER)
+         =============================================================================
+         Logo animé + Titre + Stats (régions, itinéraires, algorithmes)
+         -->
         <header>
             <div class="logo-container">
                 <div class="logo">🧭</div>
@@ -890,6 +946,11 @@ text-transform: uppercase;
             </div>
         </header>
 
+        <!-- =============================================================================
+         PANNEAU DE CONTRÔLE
+         =============================================================================
+         Sélection départ/destination + Boutons algorithmes
+         -->
         <div class="controls">
             <div class="controls-header">
                 <span>🧮 Calcul d'itinéraire</span>
@@ -911,11 +972,20 @@ text-transform: uppercase;
             </div>
             <div class="legend">
                 <div class="legend-item">
-                    <span>👁️ Afficher:</span>
+                    <span>🛣️ Afficher:</span>
                     <select id="routeType" onchange="toggleRouteDisplay()">
                         <option value="both">Les deux</option>
                         <option value="national">Route Nationale</option>
                         <option value="autoroute">Autoroute</option>
+                    </select>
+                </div>
+                <div class="legend-item">
+                    <span>🗺️ Vue:</span>
+                    <select id="mapType" onchange="changeMapType()">
+                        <option value="street">Rue</option>
+                        <option value="satellite">Satellite</option>
+                        <option value="terrain">Relief</option>
+                        <option value="dark">Sombre</option>
                     </select>
                 </div>
             </div>
@@ -923,6 +993,11 @@ text-transform: uppercase;
 
         <div class="error" id="error"></div>
 
+        <!-- =============================================================================
+         CONTENU PRINCIPAL
+         =============================================================================
+         Grille: Carte (gauche) + Sidebar résultats (droite)
+         -->
         <div class="main-content">
             <div class="map-container"><div id="map"></div></div>
             <div class="sidebar">
@@ -974,6 +1049,11 @@ text-transform: uppercase;
             </div>
         </div>
 
+        <!-- =============================================================================
+         PIED DE PAGE (FOOTER)
+         =============================================================================
+         Informations du projet et liens techniques
+         -->
         <footer class="footer">
             <div class="footer-content">
                 <div class="footer-logo">🧭</div>
@@ -993,26 +1073,57 @@ text-transform: uppercase;
         </footer>
     </div>
 
+    <!--
+    ===============================================
+    Senegal Trip Planner - Planificateur d'itinéraire
+    ===============================================
+    Structure de la page:
+    1. Header: Logo, titre et statistiques
+    2. Controls: Sélection régions + boutons algorithmes
+    3. Main Content: Carte Leaflet + Sidebar (résultats)
+    4. Footer: Informations et liens
+    -->
+    
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Scripts offline pour fonctionnement sans connexion -->
     <script src="/static/offline_engine.js"></script>
     <script src="/static/offline_routes.js"></script>
     <script>
+        // =============================================================================
+        // VARIABLES GLOBALES
+        // =============================================================================
+        // map: Instance de la carte Leaflet
+        // markers: Dict des marqueurs par région (pour affichage popup)
+        // routeLayers: Layers des routes tracées (national/autoroute)
+        // regions: Données des régions récupérées depuis le serveur
+        // currentTileLayer: Référence à la couche de tuiles actuelle
         let map, markers = {}, routeLayers = {}, regions = {};
+        let currentTileLayer = null;
 
+        // =============================================================================
+        // INITIALISATION DE LA CARTE
+        // =============================================================================
         async function initMap() {
+            // Création carte centrée sur le Sénégal (coords + zoom)
             map = L.map('map', { zoomControl: true }).setView([14.4974, -14.4524], 7);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(map);
+            
+            // Tuiles OpenStreetMap (Rue) par défaut
+            setTileLayer('street');
 
+            // Récupération des données régions depuis l'API
             try {
                 const res = await fetch('/api/regions');
                 regions = await res.json();
             } catch (e) { 
+                // Mode offline: utilisation des données locales en cache
                 console.info('Mode offline: utilisation des données locales');
                 regions = REGIONS_DATA;
             }
 
+            // Création des marqueurs pour chaque région
             Object.keys(regions).forEach(key => {
                 const r = regions[key];
+                // Palette de couleurs par région
                 const colors = {'dakar':'#e74c3c','thies':'#3498db','diourbel':'#9b59b6','kaolack':'#f39c12','saintlouis':'#1abc9c','louga':'#e67e22','kolda':'#2ecc71','ziguinchor':'#e91e63','sedhiou':'#00bcd4','kaffrine':'#8e44ad','kedougou':'#27ae60','matam':'#d35400','tamba':'#c0392b','fatick':'#16a085'};
                 const color = colors[key] || '#4a90a4';
                 const popupContent = `<div style="min-width:220px;font-family:'Inter',sans-serif;">
@@ -1040,7 +1151,11 @@ text-transform: uppercase;
             populateSelects();
         }
 
+        // =============================================================================
+        // REMPLISSAGE DES SÉLECTEURS
+        // =============================================================================
         function populateSelects() {
+            // Remplit les dropdowns départ et destination avec les noms de régions
             const start = document.getElementById('startSelect');
             const dest = document.getElementById('destinationSelect');
             Object.keys(regions).forEach(key => {
@@ -1049,14 +1164,62 @@ text-transform: uppercase;
             });
         }
 
+        // =============================================================================
+        // CHANGEMENT DU TYPE DE CARTE
+        // =============================================================================
+        // Options: street (OSM), satellite (Esri), terrain, dark (CartoDB)
+        function changeMapType() {
+            const type = document.getElementById('mapType').value;
+            setTileLayer(type);
+        }
+
+        function setTileLayer(type) {
+            // Supprime l'ancienne couche si elle existe
+            if (currentTileLayer) {
+                map.removeLayer(currentTileLayer);
+            }
+            
+            // Définition des couches de tuiles
+            const tileLayers = {
+                'street': {
+                    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    attribution: '© OpenStreetMap'
+                },
+                'satellite': {
+                    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                    attribution: '© Esri'
+                },
+                'terrain': {
+                    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+                    attribution: '© OpenTopoMap'
+                },
+                'dark': {
+                    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+                    attribution: '© CartoDB'
+                }
+            };
+            
+            const layerConfig = tileLayers[type] || tileLayers['street'];
+            currentTileLayer = L.tileLayer(layerConfig.url, {
+                attribution: layerConfig.attribution,
+                maxZoom: 18
+            }).addTo(map);
+        }
+
+        // =============================================================================
+        // GESTION DES ERREURS ET NOTIFICATIONS
+        // =============================================================================
         function showError(msg) {
+            // Affiche un message d'erreur avec animation shake
             const el = document.getElementById('error');
             el.innerHTML = `❌ ${msg}`;
             el.classList.add('active');
+            // Auto-hide après 4 secondes
             setTimeout(() => el.classList.remove('active'), 4000);
         }
 
         function showToast(msg, type = 'info') {
+            // Notification toast en bas à droite (3 secondes)
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
             toast.innerHTML = type === 'success' ? `✅ ${msg}` : `ℹ️ ${msg}`;
@@ -1068,6 +1231,11 @@ text-transform: uppercase;
             }, 3000);
         }
 
+        // =============================================================================
+        // CALCULS D'ITINÉRAIRES
+        // =============================================================================
+
+        // Calcule le plus court chemin via Dijkstra (/api/dijkstra)
         async function calculateDijkstra() {
             const dest = document.getElementById('destinationSelect').value;
             const start = document.getElementById('startSelect').value;
@@ -1093,6 +1261,7 @@ text-transform: uppercase;
             document.getElementById('loading').classList.remove('active');
         }
 
+        // Calcule via Bellman-Ford (/api/bellman)
         async function calculateBellman() {
             const dest = document.getElementById('destinationSelect').value;
             const start = document.getElementById('startSelect').value;
@@ -1114,6 +1283,7 @@ text-transform: uppercase;
             document.getElementById('loading').classList.remove('active');
         }
 
+        // Calcule le circuit touristique TSP (/api/tsp)
         async function calculateTSP() {
             const start = document.getElementById('startSelect').value;
 
@@ -1133,12 +1303,33 @@ text-transform: uppercase;
             document.getElementById('loading').classList.remove('active');
         }
 
+        // =============================================================================
+        // AFFICHAGE DES RÉSULTATS
+        // =============================================================================
+        // Génère le HTML pour afficher les itinéraires national et autoroute
+        // Calcule la différence de distance entre les deux routes
         function displayResults(data) {
             const nat = data.national;
             const aut = data.autoroute;
             
             const isTSP = nat.path.length > 2 && nat.path[0] === nat.path[nat.path.length - 1];
             const title = isTSP ? '🌍 Circuit Tourismique (TSP)' : '🛣️ Itinéraire Calculé';
+            
+            // Construction du chemin complet avec destination
+            const natFullPath = nat.path.slice(0, -1); // Enlève le retour au début (TSP)
+            const autFullPath = aut.path.slice(0, -1);
+            
+            // Pour Dijkstra/Bellman: ajouter la destination si pas déjà présente
+            let natDisplayPath = [...natFullPath];
+            let autDisplayPath = [...autFullPath];
+            if (!isTSP && nat.path.length === 2) {
+                // Route directe: ajouter la destination
+                natDisplayPath.push(nat.path[1]);
+            }
+            if (!isTSP && aut.path.length === 2) {
+                autDisplayPath.push(aut.path[1]);
+            }
+            
             const subTitle = isTSP 
                 ? `Parcourir les ${nat.path.length - 1} régions en partant de ${regions[nat.path[0]].name}`
                 : `<strong>Départ:</strong> ${regions[nat.path[0]].name} → <strong>Arrivée:</strong> ${regions[nat.path[nat.path.length-1]].name}`;
@@ -1171,7 +1362,7 @@ text-transform: uppercase;
                         ${isTSP ? `<div class="stat"><span class="stat-label">Étapes</span><span class="stat-value">${nat.path.length - 1}</span></div>` : ''}
                     </div>
                     <ul class="route-list">
-                        ${nat.path.slice(0, -1).map((key, i) => `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span><span class="region-name">${regions[key].name}</span><span class="region-arrow">→</span></li>`).join('')}
+                        ${natDisplayPath.map((key, i) => `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span><span class="region-name">${regions[key].name}</span><span class="region-arrow">→</span></li>`).join('')}
                     </ul>
                 </div>
 
@@ -1186,7 +1377,7 @@ text-transform: uppercase;
                         ${isTSP ? `<div class="stat"><span class="stat-label">Étapes</span><span class="stat-value">${aut.path.length - 1}</span></div>` : ''}
                     </div>
                     <ul class="route-list">
-                        ${aut.path.slice(0, -1).map((key, i) => `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span><span class="region-name">${regions[key].name}</span><span class="region-arrow">→</span></li>`).join('')}
+                        ${autDisplayPath.map((key, i) => `<li onclick="showRegionDetails('${key}')"><span class="num">${i+1}</span><span class="region-name">${regions[key].name}</span><span class="region-arrow">→</span></li>`).join('')}
                     </ul>
                 </div>
 
@@ -1208,6 +1399,10 @@ text-transform: uppercase;
             drawRoutes(nat.path, aut.path);
         }
 
+        // =============================================================================
+        // CONTRÔLE D'AFFICHAGE DES ROUTES
+        // =============================================================================
+        // Toggle entre affichage national/autoroute/les deux
         function toggleRouteDisplay() {
             const type = document.getElementById('routeType').value;
             const natSection = document.querySelector('.route-section.national');
@@ -1236,6 +1431,11 @@ text-transform: uppercase;
 
         window.currentRouteData = null;
 
+        // =============================================================================
+        // DESSIN DES ROUTES SUR LA CARTE
+        // =============================================================================
+        // Trace les deux routes (nationale + autoroute) sur Leaflet
+        // Utilise OSRM pour le routing en ligne, fallback offline sinon
         async function drawRoutes(nationalPath, autoroutePath) {
             console.log('drawRoutes called', nationalPath, autoroutePath);
             
@@ -1250,7 +1450,9 @@ text-transform: uppercase;
             await drawSingleRoute(autoroutePath, '#f97316', 'autoroute');
         }
 
-async function drawSingleRoute(path, color, key) {
+// Dessine une seule route (nationale ou autoroute)
+        // Essaie d'abord OSRM online, puis fallback sur getOfflineRoute()
+        async function drawSingleRoute(path, color, key) {
             console.log('drawSingleRoute:', path, key);
             if (!path || path.length < 2) return;
             
@@ -1328,7 +1530,13 @@ async function drawSingleRoute(path, color, key) {
             }
         }
 
+        // =============================================================================
+        // INFORMATIONS DÉTAILLÉES D'UNE RÉGION
+        // =============================================================================
+        // Affiche les détails (capitale, tips, sécurité, hébergement, tourisme)
+        // Centre la carte sur la région et ouvre son popup
         function showRegionDetails(key) {
+            // Récupère les données de la région sélectionnée
             const r = regions[key];
             const colors = {'dakar':'#e74c3c','thies':'#3498db','diourbel':'#9b59b6','kaolack':'#f39c12','saintlouis':'#1abc9c','louga':'#e67e22','kolda':'#2ecc71','ziguinchor':'#e91e63','sedhiou':'#00bcd4','kaffrine':'#8e44ad','kedougou':'#27ae60','matam':'#d35400','tamba':'#c0392b','fatick':'#16a085'};
             const color = colors[key] || '#4a90a4';
@@ -1352,7 +1560,12 @@ async function drawSingleRoute(path, color, key) {
             document.getElementById('regionInfo').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
+        // =============================================================================
+        // RÉINITIALISATION DE LA CARTE
+        // =============================================================================
         function resetMap() {
+            // Supprime toutes les polylignes (routes) de la carte
+            // Réinitialise la destination et affiche l'aide
             map.eachLayer(function(layer) {
                 if (layer instanceof L.Polyline) {
                     map.removeLayer(layer);
@@ -1365,6 +1578,11 @@ async function drawSingleRoute(path, color, key) {
             map.setView([14.4974, -14.4524], 7);
         }
 
+        // =============================================================================
+        // GÉOLOCALISATION
+        // =============================================================================
+        // Utilise l'API Geolocation pour situer l'utilisateur
+        // Trouve la région la plus proche via Haversine
         function locateMe() {
             if (!navigator.geolocation) {
                 alert('GPS non supporté par ce navigateur');
@@ -1416,12 +1634,24 @@ async function drawSingleRoute(path, color, key) {
             );
         }
 
+        // =============================================================================
+        // INITIALISATION AU CHARGEMENT
+        // =============================================================================
+        // Initialise la carte dès le chargement de la page
         window.onload = initMap;
 
+        // =============================================================================
+        // SERVICE WORKER (MODE OFFLINE)
+        // =============================================================================
+        // Enregistrement du SW pour mise en cache et fonctionnement hors-ligne
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/static/sw.js').catch(e => console.log('SW registration failed:', e));
         }
-
+        
+        // =============================================================================
+        // DÉTECTION ÉTAT DE CONNEXION
+        // =============================================================================
+        // Affiche une bannière quand l'utilisateur passe hors-ligne
         function updateOnlineStatus() {
             const banner = document.getElementById('offlineBanner');
             if (!navigator.onLine) {
@@ -1431,6 +1661,7 @@ async function drawSingleRoute(path, color, key) {
                 banner.classList.remove('active');
             }
         }
+        // Écouteurs d'événements online/offline
         window.addEventListener('online', updateOnlineStatus);
         window.addEventListener('offline', updateOnlineStatus);
         

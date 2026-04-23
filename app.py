@@ -1,14 +1,35 @@
+"""
+Application Flask - Senegal Trip Planner
+Planificateur d'itinéraire pour les 14 régions du Sénégal.
+Implémente les algorithmes de Dijkstra, Bellman-Ford et TSP (Two-Phase).
+"""
+
+# Imports des modules Flask et utilitaires
 from flask import Flask, render_template, jsonify, request, send_from_directory
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any, Union
 import math
 import os
 
+# Configuration de l'application Flask avec dossier static
 app = Flask(__name__, static_folder='static')
 
+# Route pour servir les fichiers statiques (manifest, icons, etc.)
 @app.route('/static/<path:filename>')
 def serve_static(filename):
     return send_from_directory('static', filename)
 
+# =============================================================================
+# DONNÉES DES RÉGIONS
+# =============================================================================
+# Dictionary contenant les informations de chaque région:
+# - name: Nom de la région
+# - capital: Ville capitale
+# - lat/lng: Coordonnées GPS
+# - info: Description générale
+# - tips: Conseils pratiques pour les voyageurs
+# - security: Consignes de sécurité
+# - hebergement: Options d'hébergement et budget
+# - tourisme: Sites et attractions touristiques
 regions = {
     "dakar": {
         "name": "Dakar", "capital": "Dakar", "lat": 14.7167, "lng": -17.4671,
@@ -124,8 +145,15 @@ regions = {
     }
 }
 
+# Liste de toutes les clés de régions (pour itération)
 all_regions = list(regions.keys())
 
+# =============================================================================
+# MATRICES DE DISTANCES
+# =============================================================================
+# distances_national: Distances en km via routes nationales (vitesse max: 80 km/h)
+# distances_autoroute: Distances en km via autoroutes (vitesse max: 100 km/h)
+# Structure: {region_depart: {region_arrivee: distance_km}}
 distances_national = {
     "dakar": {"thies": 46, "fatick": 148, "kaolack": 188},
     "thies": {"dakar": 46, "diourbel": 77, "kaolack": 116, "fatick": 75, "kaffrine": 90, "louga": 155, "saintlouis": 146},
@@ -260,8 +288,17 @@ distances_autoroute["sedhiou"]["kaffrine"] = 145
 distances_autoroute["sedhiou"]["tamba"] = 190
 
 
+# =============================================================================
+# FONCTIONS UTILITAIRES
+# =============================================================================
+
 def haversine(lat1, lon1, lat2, lon2):
-    R = 6371
+    """
+    Formule de Haversine pour calculer la distance entre deux points GPS.
+    Utilisée comme fallback quand une route directe n'existe pas.
+    Retourne la distance en km.
+    """
+    R = 6371  # Rayon de la Terre en km
     phi1, phi2 = math.radians(lat1), math.radians(lat2)
     dphi = math.radians(lat2 - lat1)
     dlambda = math.radians(lon2 - lon1)
@@ -270,6 +307,11 @@ def haversine(lat1, lon1, lat2, lon2):
 
 
 def get_distance(r1, r2, dist_matrix):
+    """
+    Récupère la distance entre deux régions depuis la matrice.
+    Retourne 0 si même région, sinon cherche dans la matrice.
+    Utilise Haversine comme fallback pour routes non définies.
+    """
     if r1 == r2:
         return 0
     if r1 in dist_matrix and r2 in dist_matrix[r1]:
@@ -281,6 +323,10 @@ def get_distance(r1, r2, dist_matrix):
 
 
 def build_matrix(distances):
+    """
+    Construit une matrice de distances complète pour toutes les paires de régions.
+    Assure que toutes les entrées ont une valeur (évite les None).
+    """
     matrix = {}
     for r1 in all_regions:
         matrix[r1] = {}
@@ -290,19 +336,25 @@ def build_matrix(distances):
     return matrix
 
 
+# Construction des matrices complètes (national et autoroute)
 road_matrix_national = build_matrix(distances_national)
 road_matrix_autoroute = build_matrix(distances_autoroute)
 
 
-def dijkstra(start, end, matrix):
+# =============================================================================
+# ALGORITHMES DE ROUTAGE
+# =============================================================================
+
+def dijkstra(start: str, end: str, matrix: Dict[str, Dict[str, float]]) -> tuple:
     """
     Algorithme de Dijkstra - Plus court chemin.
-    Complexité: O(V²) où V = nombre de régions
+    Complexité: O(V²) où V = nombre de régions.
+    Trouve le chemin le plus court entre deux régions.
     """
-    dist = {r: 9999 for r in all_regions}
-    prev = {r: None for r in all_regions}
-    dist[start] = 0
-    unvisited = set(all_regions)
+    dist: Dict[str, float] = {r: 9999.0 for r in all_regions}
+    prev: Dict[str, Union[str, None]] = {r: None for r in all_regions}
+    dist[start] = 0.0
+    unvisited: set = set(all_regions)
 
     while unvisited:
         current = min(unvisited, key=lambda x: dist[x])
@@ -333,14 +385,15 @@ def dijkstra(start, end, matrix):
     return path, round(dist[end]) if dist[end] < 9999 else 0
 
 
-def bellman_ford(start, end, matrix):
+def bellman_ford(start: str, end: str, matrix: Dict[str, Dict[str, float]]) -> tuple:
     """
-    Algorithme de Bellman-Ford - Plus court chemin avec poids négatifs.
-    Complexité: O(V*E) où V = régions, E = arêtes
+    Algorithme de Bellman-Ford - Plus court chemin avec support poids négatifs.
+    Complexité: O(V*E) où V = régions, E = arêtes.
+    Utile pour des scénarios avec coûts variables.
     """
-    dist = {r: float('inf') for r in all_regions}
-    prev = {r: None for r in all_regions}
-    dist[start] = 0
+    dist: Dict[str, float] = {r: float('inf') for r in all_regions}
+    prev: Dict[str, Union[str, None]] = {r: None for r in all_regions}
+    dist[start] = 0.0
 
     for _ in range(len(all_regions) - 1):
         for u in all_regions:
@@ -365,7 +418,7 @@ def bellman_ford(start, end, matrix):
 
 
 def calculate_path_distance(path, matrix):
-    """Calcule la distance totale d'un parcours."""
+    """Calcule la distance totale d'un parcours en additionnant les segments."""
     total = 0
     for i in range(len(path) - 1):
         if matrix[path[i]][path[i+1]] < 9999:
@@ -373,10 +426,15 @@ def calculate_path_distance(path, matrix):
     return total
 
 
+# =============================================================================
+# ALGORITHME TSP (PROBLÈME DU VENDEUR AMBULANT)
+# =============================================================================
+
 def tsp_nearest_neighbor(matrix, start):
     """
-    Phase 1: Nearest Neighbor Algorithm.
-    Complexité: O(n²) où n = nombre de régions
+    Phase 1: Algorithme Nearest Neighbor - Solution initiale pour le TSP.
+    Complexité: O(n²) où n = nombre de régions.
+    Construit une solution greedy en visitant le voisin le plus proche.
     """
     visited = {start}
     path = [start]
@@ -403,7 +461,8 @@ def tsp_nearest_neighbor(matrix, start):
 def two_opt_optimize(path, matrix, max_iterations=300):
     """
     Phase 2: 2-opt Local Search Optimization.
-    Complexité: O(n² × itérations)
+    Complexité: O(n² × itérations).
+    Améliore la solution en inversant des segments pour réduire la distance totale.
     """
     if len(path) < 4:
         return path
@@ -436,9 +495,10 @@ def two_opt_optimize(path, matrix, max_iterations=300):
 
 def two_phase_tsp(matrix, start):
     """
-    Algorithme TSP en deux phases:
-    - Phase 1: Nearest Neighbor (solution initiale)
-    - Phase 2: 2-opt (optimisation)
+    Algorithme TSP en deux phases pour circuit touristique optimal:
+    - Phase 1: Nearest Neighbor (solution initiale greedy)
+    - Phase 2: 2-opt (optimisation locale pour améliorer la solution)
+    Retourne le chemin optimisé et la distance totale.
     """
     initial_path = tsp_nearest_neighbor(matrix, start)
     optimized_path = two_opt_optimize(initial_path, matrix)
@@ -448,6 +508,7 @@ def two_phase_tsp(matrix, start):
 
 
 def format_time(hours):
+    """Convertit les heures décimales en format lisible (ex: 2h 30min)."""
     h = int(hours)
     m = int((hours - h) * 60)
     if h > 0:
@@ -455,18 +516,29 @@ def format_time(hours):
     return f"{m}min"
 
 
+# =============================================================================
+# ROUTES Flask
+# =============================================================================
+
 @app.route('/')
 def index():
+    """Page principale - Affiche la carte et les contrôles."""
     return render_template('index.html', regions=regions)
 
 
 @app.route('/api/regions')
 def get_regions():
+    """API REST - Retourne toutes les données des régions au format JSON."""
     return jsonify(regions)
 
 
 @app.route('/api/dijkstra')
 def api_dijkstra():
+    """
+    API Dijkstra - Calcule le plus court chemin entre départ et destination.
+    Paramètres GET: start (clé région), destination (clé région)
+    Retourne: path[], distance, time pour routes nationales et autoroute.
+    """
     destination = request.args.get('destination')
     start = request.args.get('start', 'dakar')
     
@@ -476,6 +548,7 @@ def api_dijkstra():
     path_national, dist_national = dijkstra(start, destination, road_matrix_national)
     path_autoroute, dist_autoroute = dijkstra(start, destination, road_matrix_autoroute)
     
+    # Vitesses moyennes estimées selon type de route
     speed_national = 80
     speed_autoroute = 100
     
@@ -495,7 +568,11 @@ def api_dijkstra():
 
 @app.route('/api/bellman')
 def api_bellman():
-    """API Bellman-Ford algorithm."""
+    """
+    API Bellman-Ford - Calcule le plus court chemin avec algorithme Bellman-Ford.
+    Paramètres GET: start, destination
+    Retourne: path[], distance, time pour les deux types de routes.
+    """
     destination = request.args.get('destination')
     start = request.args.get('start', 'dakar')
     
@@ -525,6 +602,11 @@ def api_bellman():
 
 @app.route('/api/tsp')
 def api_tsp():
+    """
+    API TSP - Calcule un circuit touristique passant par toutes les régions.
+    Paramètre GET: start (région de départ)
+    Retourne: chemin optimisé visiting toutes les régions + distance totale.
+    """
     start = request.args.get('start', 'dakar')
     
     if start not in all_regions:
@@ -552,4 +634,6 @@ def api_tsp():
 
 
 if __name__ == '__main__':
+    # Démarrage du serveur Flask en mode debug
+    # Accessible sur http://localhost:5000
     app.run(debug=True)
